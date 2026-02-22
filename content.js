@@ -10,25 +10,178 @@
 
     function main() {
         window.fullName = null;
-        getFullName();
 
-        breakEventListeners();
-
-        breakTimer();
+        // TODO: Call these only after login
+        // TODO: Will timer break work if called later?
+        // breakEventListeners();
+        window.onExtensionActivated = function () {
+            breakEventListeners();
+            breakTimer();
+        };
 
         createFloatingMenu();
 
         const btnFullscreen = document.getElementById("btn-fullscreen");
-        addFullscreenButton(btnFullscreen);
+        enableFullscreenButton(btnFullscreen);
 
         const btnBack = document.getElementById("btn-back");
-        addBackButton(btnBack);
+        enableBackButton(btnBack);
 
         const btnCopy = document.getElementById("btn-copy");
-        addCopyButton(btnCopy);
+        enableCopyButton(btnCopy);
 
         const btnAskAI = document.getElementById("btn-ask-ai");
-        addAskAIButton(btnAskAI);
+        enableAskAIButton(btnAskAI);
+
+        // Kick off the name-capture / site-button watcher
+        startNameFlow();
+    }
+
+    let fullNameBtnObserver = null;
+    let returnBtnObserver = null;
+    let startTestBtnObserver = null;
+
+    function startNameFlow() {
+        stopNameFlow();
+
+        if (typeof window.onSiteStageReset === "function") {
+            window.onSiteStageReset();
+        }
+
+        // In case of site restart after already submitting name there is no longer a submit button to attach to
+        try {
+            if (sessionStorage.getItem("tt_captured_name")) {
+                FindReturnButton();
+                return;
+            }
+        } catch {}
+
+        function tryAttachNameBtn() {
+            const nameInput = document.querySelector('input[name="name"]');
+            const submitButton = document.querySelector("button.btn-primary.mx-auto.mt-2");
+            if (!nameInput || !submitButton) return false;
+
+            submitButton.addEventListener(
+                "click",
+                function () {
+                    const nameValue = nameInput.value.trim();
+
+                    // In case the user sets name but has number over 100 (get full name fires but user can change it afterwards)
+                    const observer = new MutationObserver(() => {
+                        if (!document.contains(submitButton)) {
+                            observer.disconnect();
+
+                            window.fullName = nameValue;
+                            try {
+                                sessionStorage.setItem("tt_captured_name", window.fullName);
+                            } catch {}
+
+                            if (typeof window.fullNameSubmitted === "function") {
+                                window.fullNameSubmitted(window.fullName);
+                            }
+
+                            FindReturnButton();
+                        }
+                    });
+                    observer.observe(document.body, { childList: true, subtree: true });
+                },
+                { once: true },
+            );
+
+            return true;
+        }
+
+        if (!tryAttachNameBtn()) {
+            fullNameBtnObserver = new MutationObserver(() => {
+                if (tryAttachNameBtn()) {
+                    fullNameBtnObserver.disconnect();
+                    fullNameBtnObserver = null;
+                }
+            });
+            fullNameBtnObserver.observe(document.body, { childList: true, subtree: true });
+        }
+    }
+
+    function FindReturnButton() {
+        function tryAttachReturnBtn() {
+            const root = document.getElementById("root");
+            if (!root) return false;
+
+            const returnBtn = root.children[1]?.children[0]?.children[0]?.children[1]?.children[0]?.querySelector(
+                "button.btn-default.color-blue.m-1",
+            );
+            if (!returnBtn) return false;
+
+            returnBtn.addEventListener(
+                "click",
+                function () {
+                    window.fullName = null;
+                    try {
+                        sessionStorage.removeItem("tt_captured_name");
+                    } catch {}
+                    startNameFlow();
+                },
+                { once: true },
+            );
+
+            return true;
+        }
+
+        if (!tryAttachReturnBtn()) {
+            returnBtnObserver = new MutationObserver(() => {
+                if (tryAttachReturnBtn()) {
+                    returnBtnObserver.disconnect();
+                    returnBtnObserver = null;
+                }
+            });
+            returnBtnObserver.observe(document.body, { childList: true, subtree: true });
+        }
+
+        FindStartTestBtn();
+    }
+
+    function FindStartTestBtn() {
+        function tryAttachStartTestBtn() {
+            const startTestBtn = document.querySelector("button.btn-lg");
+            if (!startTestBtn) return false;
+
+            startTestBtn.addEventListener(
+                "click",
+                function () {
+                    if (typeof window.onSiteStartTestBtnClicked === "function") {
+                        window.onSiteStartTestBtnClicked();
+                    }
+                },
+                { once: true },
+            );
+
+            return true;
+        }
+
+        if (!tryAttachStartTestBtn()) {
+            startTestBtnObserver = new MutationObserver(() => {
+                if (tryAttachStartTestBtn()) {
+                    startTestBtnObserver.disconnect();
+                    startTestBtnObserver = null;
+                }
+            });
+            startTestBtnObserver.observe(document.body, { childList: true, subtree: true });
+        }
+    }
+
+    function stopNameFlow() {
+        if (fullNameBtnObserver) {
+            fullNameBtnObserver.disconnect();
+            fullNameBtnObserver = null;
+        }
+        if (returnBtnObserver) {
+            returnBtnObserver.disconnect();
+            returnBtnObserver = null;
+        }
+        if (startTestBtnObserver) {
+            startTestBtnObserver.disconnect();
+            startTestBtnObserver = null;
+        }
     }
 
     function breakEventListeners() {
@@ -48,18 +201,12 @@
             "keypress",
             "keyup",
         ];
-
         events.forEach((event) => {
             window.addEventListener(
                 event,
                 (e) => {
                     const target = e.target;
-
-                    // Only run closest if target is a real Element
-                    if (target instanceof Element && target.closest("#ai-window")) {
-                        return;
-                    }
-
+                    if (target instanceof Element && target.closest("#tt-window")) return;
                     e.stopImmediatePropagation();
                 },
                 true,
@@ -68,46 +215,32 @@
     }
 
     function breakTimer() {
-        const script = document.createElement("script");
-
-        script.src = chrome.runtime.getURL("inject.js");
-
-        script.onload = function () {
-            script.remove();
+        const s = document.createElement("script");
+        s.src = chrome.runtime.getURL("inject.js");
+        s.onload = function () {
+            s.remove();
         };
-
-        (document.head || document.documentElement).appendChild(script);
+        (document.head || document.documentElement).appendChild(s);
     }
 
-    function addFullscreenButton(btn) {
-        btn.addEventListener("click", () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
+    function enableFullscreenButton(btnObject) {
+        btnObject.addEventListener("click", () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
         });
     }
 
-    function addBackButton(btn) {
-        btn.onclick = function () {
+    function enableBackButton(btnObject) {
+        btnObject.onclick = function () {
             const key = Object.keys(localStorage).find((k) => k.startsWith("current-question-"));
-
             if (!key) return;
-
-            let current = parseInt(localStorage.getItem(key));
-
+            const current = parseInt(localStorage.getItem(key));
             if (current <= 0) return;
-
             const newValue = current - 1;
-
-            // update storage
             localStorage.setItem(key, newValue);
-
-            // notify React WITHOUT reload
             window.dispatchEvent(
                 new StorageEvent("storage", {
-                    key: key,
+                    key,
                     newValue: newValue.toString(),
                     oldValue: current.toString(),
                     storageArea: localStorage,
@@ -118,118 +251,78 @@
 
     function getFormattedQuestion(copyImagesAsURLs) {
         const allQuestionObjects = document.querySelectorAll('div[class*="Question_question__"]');
-        prompt = "Solve the following questions with a short answer:\n";
+        let prompt = "Solve the following questions with a short answer:\n";
         let questions = [];
-        let questionIndex = 1;
-        for (const questionObject of allQuestionObjects) {
-            const questionDiv = questionObject.querySelector('div[class*="Question_disableSelection__"]');
-            const questionDivTest = questionDiv.children[0].children[0].children[1];
-            const questionDivImage = copyImagesAsURLs ? questionDiv.querySelector("img") : "";
-            const question = questionDivTest?.value || questionDivTest?.textContent || "";
-            const answerObjects = questionObject.querySelectorAll(".public-DraftStyleDefault-block");
+        let idx = 1;
+
+        for (const qObj of allQuestionObjects) {
+            const qDiv = qObj.querySelector('div[class*="Question_disableSelection__"]');
+            const qTest = qDiv.children[0].children[0].children[1];
+            const qImg = copyImagesAsURLs ? qDiv.querySelector("img") : null;
+            const qText = qTest?.value || qTest?.textContent || "";
+            const ansEls = qObj.querySelectorAll(".public-DraftStyleDefault-block");
             let answers = "";
-            // Отворен отговор
-            if (answerObjects.length == 0) {
+
+            if (ansEls.length === 0) {
                 answers = "Answer:\n";
             } else {
-                const answersRaw = [];
-                for (let i = 1; i < answerObjects.length; i++) {
-                    const cleanedText = answerObjects[i].innerText.trim();
-                    if (cleanedText) answersRaw.push(cleanedText);
+                const raw = [];
+                for (let i = 1; i < ansEls.length; i++) {
+                    const t = ansEls[i].innerText.trim();
+                    if (t) raw.push(t);
                 }
-                // Попълване на празни места
-                if (questionObject.querySelector('span[contenteditable="true"]')) {
-                    answers = "Given text:\n";
-                    answers += answersRaw.join(" ____ ");
-                }
-                // Свързване на елементи
-                else if (questionObject.querySelector('[class*="SolvableConnectPairs_part__"]')) {
-                    answers += "Given answers:\n";
-                    const mid = answersRaw.length / 2;
-                    const answersSection = [];
-                    answersRaw.forEach((ans, index) => {
-                        const label = index + 1 <= mid ? index + 1 : numberToLetter(index + 1);
-                        answersSection.push(`${label}. ${ans}`);
-                    });
-                    answers += answersSection.join("\n");
-                }
-                // Затворени отговори
-                else {
-                    // Трябва да форматираме на ново отговорите в случай че текстът е разкъсан от снимки
-                    answersRaw.length = 0;
-                    for (let i = 1; i < answerObjects.length; i++) {
-                        const allTextObjectsInAnswer = [];
-                        // answerObjects[i].querySelectorAll("span[data-offset-key]").forEach((ans) => {
-                        answerObjects[i].childNodes.forEach((node) => {
-                            let cleanedText = "";
-                            if (node.tagName === "SPAN") {
-                                cleanedText = node.innerText.trim();
-                            } else if (copyImagesAsURLs) {
-                                const src = node.src || node.getAttribute("src");
-                                if (src) {
-                                    cleanedText = src;
-                                }
-                            }
-                            if (cleanedText) allTextObjectsInAnswer.push(cleanedText);
-                        });
-                        answersRaw.push(allTextObjectsInAnswer.join(" "));
-                    }
 
-                    answers += "Given answers:\n";
-                    const answersSection = [];
-                    answersRaw.forEach((ans, index) => {
-                        answersSection.push(`${index + 1}. ${ans}`);
-                    });
-                    answers += answersSection.join("\n");
+                if (qObj.querySelector('span[contenteditable="true"]')) {
+                    answers = "Given text:\n" + raw.join(" ____ ");
+                } else if (qObj.querySelector('[class*="SolvableConnectPairs_part__"]')) {
+                    const mid = raw.length / 2;
+                    answers =
+                        "Given answers:\n" +
+                        raw.map((a, i) => `${i + 1 <= mid ? i + 1 : numberToLetter(i + 1)}. ${a}`).join("\n");
+                } else {
+                    raw.length = 0;
+                    for (let i = 1; i < ansEls.length; i++) {
+                        const parts = [];
+                        ansEls[i].childNodes.forEach((node) => {
+                            let t = "";
+                            if (node.tagName === "SPAN") {
+                                t = node.innerText.trim();
+                            } else if (copyImagesAsURLs) {
+                                const src = node.src || node.getAttribute?.("src");
+                                if (src) t = src;
+                            }
+                            if (t) parts.push(t);
+                        });
+                        raw.push(parts.join(" "));
+                    }
+                    answers = "Given answers:\n" + raw.map((a, i) => `${i + 1}. ${a}`).join("\n");
                 }
             }
-            questions.push(`${questionIndex}. ${question}\n${questionDivImage ? questionDivImage.src : ""}\n${answers}\n`);
-            questionIndex++;
+
+            questions.push(`${idx}. ${qText}\n${qImg ? qImg.src : ""}\n${answers}\n`);
+            idx++;
         }
+
         return prompt + questions.join("\n");
     }
 
-    function addCopyButton(btn) {
-        btn.onclick = function () {
-            const text = getFormattedQuestion(true);
-            navigator.clipboard.writeText(text);
+    function enableCopyButton(btnObject) {
+        btnObject.onclick = function () {
+            navigator.clipboard.writeText(getFormattedQuestion(true));
         };
     }
 
-    function addAskAIButton(btn) {
-        btn.onclick = function () {
+    function enableAskAIButton(btnObject) {
+        btnObject.onclick = function () {
             const text = getFormattedQuestion(false);
             const toggleBtn = document.getElementById("tt-toggle");
-            if (toggleBtn && toggleBtn.textContent === "Show AI") {
-                toggleBtn.click();
-            }
+            if (toggleBtn && toggleBtn.textContent === "Show AI") toggleBtn.click();
             window.sendMessage(text);
         };
     }
 
-    function getFullName() {
-        const interval = setInterval(() => {
-            const nameInput = document.querySelector('input[name="name"]');
-            const submitButton = document.querySelector("button.btn-primary.mx-auto.mt-2");
-
-            if (submitButton && nameInput) {
-                clearInterval(interval);
-
-                submitButton.addEventListener(
-                    "click",
-                    function () {
-                        window.fullName = nameInput.value;
-                    },
-                    { once: true },
-                );
-            }
-        }, 500);
-    }
-
     function numberToLetter(num) {
-        if (num >= 1 && num <= 26) {
-            return String.fromCharCode(96 + num);
-        }
+        if (num >= 1 && num <= 26) return String.fromCharCode(96 + num);
         return num;
     }
 
@@ -240,17 +333,12 @@
             callback();
             return;
         }
-
         const observer = new MutationObserver(() => {
             if (document.body) {
                 observer.disconnect();
                 callback();
             }
         });
-
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true,
-        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
     }
 })();

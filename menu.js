@@ -1,49 +1,181 @@
 // menu.js
+// TODO: Hide login inputs and button on successful login, but show them again if session is lost (clearSession()?)
+// TODO: On successful login check if test has already started and go to active stage
+const SERVER = "http://localhost:8000";
+
+const SS_KEY = "tt_token";
+const SS_STAGE_KEY = "tt_stage";
+
+let sessionToken = null;
+let sessionPayload = null;
+let aiApiKey = null;
+let restoredNameFromStorage = false;
+
+function parsePayload(token) {
+    try {
+        const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        const json = decodeURIComponent(
+            atob(b64)
+                .split("")
+                .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+                .join(""),
+        );
+        return JSON.parse(json);
+    } catch {
+        return null;
+    }
+}
+
+function storeSession(token) {
+    sessionToken = token;
+    sessionPayload = parsePayload(token);
+    try {
+        sessionStorage.setItem(SS_KEY, token);
+    } catch {}
+}
+
+function clearSession() {
+    sessionToken = null;
+    sessionPayload = null;
+    try {
+        sessionStorage.removeItem(SS_KEY);
+    } catch {}
+}
+
+function isTokenValid() {
+    if (!sessionToken || !sessionPayload) return false;
+    return sessionPayload.exp && sessionPayload.exp > Math.floor(Date.now() / 1000);
+}
+
+// ── Restore session from sessionStorage on script load ────────────────────
+// Runs once when the content script is injected (i.e. on every page load/
+// refresh). If a valid token is found the stage will be restored below.
+(function restoreSession() {
+    try {
+        const saved = sessionStorage.getItem(SS_KEY);
+        if (!saved) return;
+        const payload = parsePayload(saved);
+        if (!payload) {
+            sessionStorage.removeItem(SS_KEY);
+            return;
+        }
+        const now = Math.floor(Date.now() / 1000);
+        if (!payload.exp || payload.exp <= now) {
+            sessionStorage.removeItem(SS_KEY);
+            return;
+        }
+        sessionToken = saved;
+        sessionPayload = payload;
+    } catch {}
+})();
+// Also turns cyrillic into latin
+function normalizeName(str) {
+    return (str || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z\s]/g, "")
+        .replace(/\s+/g, " ");
+}
+
 function createFloatingMenu() {
-    const CONFIG = {
-        apiKey: "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",
-        model: "nvidia/nemotron-nano-12b-v2-vl:free",
-    };
+    const CONFIG = { model: "nvidia/nemotron-nano-12b-v2-vl:free" };
+
+    // ── Internal state ─────────────────────────────────────────────────────
+    // Three stages mirroring the site's flow:
+    //   "waiting_name"  – page just loaded, user hasn't typed name yet
+    //   "waiting_login" – name submitted on site, user may now log in
+    //   "waiting_start_test" – login succeeded, waiting for startTestButton to unlock menu
+    //   "active"        – startTestButton clicked, full menu available
+    let stage = "waiting_name";
+    let capturedName = null;
 
     const secretIcon = document.createElement("div");
     secretIcon.id = "secret-icon";
     document.body.appendChild(secretIcon);
 
-    const windowEl = document.createElement("div");
-    windowEl.id = "tt-window";
-    windowEl.style.display = "none";
-    document.body.appendChild(windowEl);
+    const menu = document.createElement("div");
+    menu.id = "tt-window";
+    menu.style.display = "none";
+    document.body.appendChild(menu);
 
-    // ── Header ──────────────────────────────────────────────────
     const header = document.createElement("div");
     header.id = "tt-header";
-
     const title = document.createElement("div");
     title.textContent = "ТъпТест";
-
     const closeBtn = document.createElement("div");
     closeBtn.id = "tt-close";
     closeBtn.textContent = "✕";
-
     header.appendChild(title);
     header.appendChild(closeBtn);
-    windowEl.appendChild(header);
+    menu.appendChild(header);
 
-    // ── Content ──────────────────────────────────────────────────
+    // Wrapper for LoginScreen, ButtonsScreen and AIScreen
     const content = document.createElement("div");
     content.id = "tt-content";
-    windowEl.appendChild(content);
+    menu.appendChild(content);
 
-    // ── Chat screen ──────────────────────────────────────────────
-    const ttScreen = document.createElement("div");
-    ttScreen.id = "tt-screen";
-    ttScreen.className = "tt-screen";
-    ttScreen.style.display = "none";
-    content.appendChild(ttScreen);
+    const loginScreen = document.createElement("div");
+    loginScreen.id = "login-screen";
+    loginScreen.className = "tt-screen";
+    loginScreen.style.display = "flex";
+    content.appendChild(loginScreen);
+
+    const loginInner = document.createElement("div");
+    loginInner.id = "login-inner";
+    loginScreen.appendChild(loginInner);
+
+    const loginWarning = document.createElement("div");
+    loginWarning.id = "login-warning";
+    loginWarning.className = "tt-login-warning";
+    loginWarning.textContent = "⚠️ Влез в акаунта си преди да започнеш тест! ( препоръчително )";
+    loginInner.appendChild(loginWarning);
+
+    const loginHint = document.createElement("div");
+    loginHint.id = "login-hint";
+    loginHint.className = "tt-login-hint";
+    loginInner.appendChild(loginHint);
+
+    const loginTitle = document.createElement("div");
+    loginTitle.className = "tt-section-label";
+    loginTitle.textContent = "Вход";
+    loginInner.appendChild(loginTitle);
+
+    const loginUsername = document.createElement("input");
+    loginUsername.type = "text";
+    loginUsername.id = "login-username";
+    loginUsername.placeholder = "Потребителско име";
+    loginUsername.className = "tt-login-input";
+    loginInner.appendChild(loginUsername);
+
+    const loginPassword = document.createElement("input");
+    loginPassword.type = "password";
+    loginPassword.id = "login-password";
+    loginPassword.placeholder = "Парола";
+    loginPassword.className = "tt-login-input";
+    loginInner.appendChild(loginPassword);
+
+    const loginError = document.createElement("div");
+    loginError.id = "login-error";
+    loginError.className = "tt-login-error";
+    loginError.style.display = "none";
+    loginInner.appendChild(loginError);
+
+    const loginBtn = document.createElement("button");
+    loginBtn.className = "tt-button";
+    loginBtn.textContent = "Влез";
+    loginInner.appendChild(loginBtn);
+
+    const aiScreen = document.createElement("div");
+    aiScreen.id = "tt-screen";
+    aiScreen.className = "tt-screen";
+    aiScreen.style.display = "none";
+    content.appendChild(aiScreen);
 
     const messages = document.createElement("div");
     messages.id = "tt-messages";
-    ttScreen.appendChild(messages);
+    aiScreen.appendChild(messages);
 
     const inputArea = document.createElement("div");
     inputArea.id = "tt-input-area";
@@ -58,141 +190,435 @@ function createFloatingMenu() {
 
     inputArea.appendChild(input);
     inputArea.appendChild(send);
-    ttScreen.appendChild(inputArea);
+    aiScreen.appendChild(inputArea);
 
-    // ── Menu screen ──────────────────────────────────────────────
-    const menuScreen = document.createElement("div");
-    menuScreen.id = "menu-screen";
-    menuScreen.className = "tt-screen";
-    menuScreen.style.display = "flex";
-    content.appendChild(menuScreen);
+    const buttonsScreen = document.createElement("div");
+    buttonsScreen.id = "buttons-screen";
+    buttonsScreen.className = "tt-screen";
+    buttonsScreen.style.display = "none";
+    content.appendChild(buttonsScreen);
 
-    // Status badges
-    const statusRow = document.createElement("div");
-    statusRow.className = "tt-status-row";
-
+    const badgesRow = document.createElement("div");
+    badgesRow.className = "tt-badges-row";
     const badge1 = document.createElement("div");
     badge1.className = "tt-badge";
     badge1.textContent = "Bypass ON";
-
     const badge2 = document.createElement("div");
     badge2.className = "tt-badge";
     badge2.textContent = "Timer OFF";
+    badgesRow.appendChild(badge1);
+    badgesRow.appendChild(badge2);
+    buttonsScreen.appendChild(badgesRow);
 
-    statusRow.appendChild(badge1);
-    statusRow.appendChild(badge2);
-    menuScreen.appendChild(statusRow);
-
-    // Section label
     const sectionLabel = document.createElement("div");
     sectionLabel.className = "tt-section-label";
-    sectionLabel.textContent = "Actions";
-    menuScreen.appendChild(sectionLabel);
+    sectionLabel.textContent = "Действия";
+    buttonsScreen.appendChild(sectionLabel);
 
-    // Buttons
     const btnFullscreen = document.createElement("button");
     btnFullscreen.textContent = "Toggle Fullscreen";
     btnFullscreen.className = "tt-button";
     btnFullscreen.id = "btn-fullscreen";
-    menuScreen.appendChild(btnFullscreen);
+    buttonsScreen.appendChild(btnFullscreen);
 
     const btnBack = document.createElement("button");
     btnBack.textContent = "Предишен въпрос";
     btnBack.className = "tt-button";
     btnBack.id = "btn-back";
-    menuScreen.appendChild(btnBack);
+    buttonsScreen.appendChild(btnBack);
 
     const btnCopy = document.createElement("button");
     btnCopy.textContent = "Копирай въпрос/и\n( Поддържа снимки )";
     btnCopy.className = "tt-button";
     btnCopy.id = "btn-copy";
-    menuScreen.appendChild(btnCopy);
+    buttonsScreen.appendChild(btnCopy);
 
     const btnAskAI = document.createElement("button");
     btnAskAI.textContent = "Попитай AI\n( Не поддържа снимки )";
     btnAskAI.className = "tt-button";
     btnAskAI.id = "btn-ask-ai";
-    menuScreen.appendChild(btnAskAI);
+    buttonsScreen.appendChild(btnAskAI);
 
-    // ── Toggle button ────────────────────────────────────────────
-    const toggleBtn = document.createElement("button");
-    toggleBtn.id = "tt-toggle";
-    toggleBtn.textContent = "Show AI";
-    windowEl.appendChild(toggleBtn);
+    const toggleMenusBtn = document.createElement("button");
+    toggleMenusBtn.id = "tt-toggle";
+    toggleMenusBtn.style.display = "none";
+    toggleMenusBtn.textContent = "Show AI";
+    menu.appendChild(toggleMenusBtn);
 
-    // ── Drag ─────────────────────────────────────────────────────
-    let dragging = false;
-    let offsetX, offsetY;
+    function applyStage() {
+        // Always showing loginScreen until stage === "active"
+        const isActive = stage === "active";
 
+        loginScreen.style.display = isActive ? "none" : "flex";
+        buttonsScreen.style.display = isActive ? "flex" : "none";
+        aiScreen.style.display = "none";
+        toggleMenusBtn.style.display = isActive ? "block" : "none";
+        if (isActive) toggleMenusBtn.textContent = "Show AI";
+        loginWarning.style.display = isActive ? "none" : "block";
+
+        // Input locking
+        const canLogin = stage === "waiting_login" || stage === "waiting_start_test";
+        loginUsername.disabled = !canLogin;
+        loginPassword.disabled = !canLogin;
+        loginBtn.disabled = !canLogin;
+        loginUsername.style.opacity = canLogin ? "1" : "0.45";
+        loginPassword.style.opacity = canLogin ? "1" : "0.45";
+        loginBtn.style.opacity = canLogin ? "1" : "0.45";
+
+        switch (stage) {
+            case "waiting_name":
+                loginHint.textContent = "⏳ Въведи името си в сайта първо.";
+                loginHint.className = "tt-login-hint tt-hint-waiting";
+                break;
+            case "waiting_login":
+                loginHint.textContent = "✅ Името е въведено. Влез в акаунта си.\n";
+                loginHint.className = "tt-login-hint tt-hint-ready";
+                break;
+            case "waiting_start_test":
+                loginHint.textContent = '✅ Приет. Натисни "Започни теста" в сайта.';
+                loginHint.className = "tt-login-hint tt-hint-waiting";
+                // Clear credentials from view now that login succeeded
+                loginUsername.value = "";
+                loginPassword.value = "";
+                loginError.style.display = "none";
+                loginBtn.textContent = "Влез";
+
+                // loginUsername.style.display = "none";
+                // loginPassword.style.display = "none";
+                // loginBtn.style.display = "none";
+                // loginTitle.style.display = "none";
+                break;
+            case "active":
+                // Activate breaks
+                if (typeof window.onExtensionActivated === "function") {
+                    window.onExtensionActivated();
+                }
+                // ------   Removed user badge
+
+                // Show user badge in menu
+                // const p = sessionPayload;
+                // if (p) {
+                //     userBadge.textContent = `👤 ${p.full_name_cyrillic || p.sub}`;
+                //     userBadge.style.display = "block";
+                // }
+                break;
+        }
+    }
+
+    // Initial state — restore to "active" if a valid session survived a refresh
+    if (isTokenValid()) {
+        const p = sessionPayload;
+        // We can't know capturedName after a refresh (it was in memory),
+        // but the name was already validated at login time, so it's safe to
+        // go straight to active. content.js will still watch startTestButton on the
+        // live page, but the user was already past that gate before refreshing.
+        capturedName = p.full_name_latin || null;
+
+        try {
+            const savedStage = sessionStorage.getItem(SS_STAGE_KEY);
+            if (savedStage === "waiting_start_test") {
+                stage = "waiting_start_test";
+                restoredNameFromStorage = true;
+            } else {
+                stage = "active";
+                if (typeof window.onExtensionActivated === "function") {
+                    window.onExtensionActivated();
+                }
+            }
+        } catch {
+            stage = "active";
+            if (typeof window.onExtensionActivated === "function") {
+                window.onExtensionActivated();
+            }
+        }
+        applyStage();
+    } else {
+        // No valid token — check if the user already entered their name before the reload
+        try {
+            const savedName = sessionStorage.getItem("tt_captured_name");
+            console.log("found saved name");
+            console.log(savedName);
+            if (savedName) {
+                capturedName = savedName;
+                stage = "waiting_login";
+                restoredNameFromStorage = true;
+            } else {
+                stage = "waiting_name";
+            }
+        } catch {
+            stage = "waiting_name";
+        }
+        console.log(`stage is ${stage}`);
+        applyStage();
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // CALLBACKS CALLED BY content.js
+    // ═════════════════════════════════════════════════════════════════════════
+
+    // Called when user clicks the "return to name input" button OR on page load.
+    // clearSession() also removes the token from sessionStorage, so a refresh
+    // after going back to the name screen will correctly start from scratch.
+    window.onSiteStageReset = function () {
+        if (restoredNameFromStorage) {
+            restoredNameFromStorage = false;
+            return;
+        }
+
+        capturedName = null;
+        clearSession();
+        try {
+            sessionStorage.removeItem("tt_captured_name");
+            sessionStorage.removeItem(SS_STAGE_KEY); // ← only clear on real reset
+        } catch {}
+        loginError.style.display = "none";
+        stage = "waiting_name";
+        applyStage();
+    };
+
+    // Called when user submits name with submitButton
+    window.fullNameSubmitted = function (enteredName) {
+        capturedName = enteredName;
+        stage = "waiting_login";
+        applyStage();
+    };
+
+    // Called when user clicks startTestButton
+    window.onSiteStartTestBtnClicked = function () {
+        try {
+            sessionStorage.removeItem(SS_STAGE_KEY);
+        } catch {}
+        // Edge case: token expired between login and startTestButton press
+        if (!isTokenValid()) {
+            clearSession();
+            stage = "waiting_login";
+            applyStage();
+            loginError.textContent = "Сесията изтече. Влез отново.";
+            loginError.style.display = "block";
+            return;
+        }
+        // Name was already validated inside doLogin — safe to proceed
+        stage = "active";
+        applyStage();
+        if (typeof window.onExtensionActivated === "function") {
+            window.onExtensionActivated();
+        }
+    };
+
+    function namesMatch(userName) {
+        const payload = sessionPayload;
+        if (!payload) return false;
+
+        const normalizedUserName = normalizeName(userName);
+        if (!normalizedUserName) return false;
+
+        const userParts = normalizedUserName.split(" ");
+
+        function variantsOfName(fullName) {
+            const normalizedFullName = normalizeName(fullName || "");
+            if (!normalizedFullName) return [];
+            const parts = normalizedFullName.split(" ");
+            const results = [parts];
+            if (parts.length >= 3) {
+                results.push([parts[0], parts[parts.length - 1]]);
+            }
+            return results;
+        }
+
+        const candidateNamesParts = [...variantsOfName(payload.full_name_latin), ...variantsOfName(payload.full_name_cyrillic)];
+
+        return candidateNamesParts.some((candidateNameParts) => {
+            if (candidateNameParts.length !== userParts.length) return false;
+            return userParts.every((name, i) => name === candidateNameParts[i]);
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // LOGIN LOGIC
+    // ═════════════════════════════════════════════════════════════════════════
+
+    async function doLogin() {
+        if (stage !== "waiting_login") return;
+
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+
+        if (!username || !password) {
+            loginError.textContent = "Моля въведи потребителско име и парола.";
+            loginError.style.display = "block";
+            return;
+        }
+
+        // TODO: Send capturedname / siteEnteredName to server for a second check there
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Влизане...";
+        loginError.style.display = "none";
+
+        try {
+            const res = await fetch(`${SERVER}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.access_token) {
+                loginError.textContent = data.detail || "Грешно потребителско име или парола.";
+                loginError.style.display = "block";
+                return;
+            }
+
+            storeSession(data.access_token);
+
+            if (!isTokenValid()) {
+                loginError.textContent = "Получен е невалиден токен от сървъра.";
+                loginError.style.display = "block";
+                clearSession();
+                return;
+            }
+
+            const payload = sessionPayload;
+            if (!payload.subscription_active) {
+                loginError.textContent = "Абонаментът не е активен. Свържи се с администратор.";
+                loginError.style.display = "block";
+                clearSession();
+                return;
+            }
+
+            if (capturedName && !namesMatch(capturedName)) {
+                const expectedLatin = payload.full_name_latin || "";
+                const expectedCyrillic = payload.full_name_cyrillic || "";
+                loginError.textContent = `Името не съвпада - върни се и го поправи.\nВъведено:\n${capturedName}\nРегистрирано:\n${expectedCyrillic}\n${expectedLatin}`;
+                loginError.style.display = "block";
+                clearSession();
+                return;
+            }
+
+            // Success — but stay on login screen until startTestButton is pressed
+            stage = "waiting_start_test";
+            try {
+                sessionStorage.setItem(SS_STAGE_KEY, "waiting_start_test");
+            } catch {}
+            applyStage();
+        } catch (e) {
+            loginError.textContent = "Проблем с връзката към сървъра.";
+            loginError.style.display = "block";
+            console.error(e);
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Влез";
+        }
+    }
+
+    loginBtn.addEventListener("click", doLogin);
+    loginPassword.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") doLogin();
+    });
+
+    // ── Drag ──────────────────────────────────────────────────────────────
+    let dragging = false,
+        offsetX,
+        offsetY;
     header.onmousedown = (e) => {
         dragging = true;
-        offsetX = e.clientX - windowEl.offsetLeft;
-        offsetY = e.clientY - windowEl.offsetTop;
+        offsetX = e.clientX - menu.offsetLeft;
+        offsetY = e.clientY - menu.offsetTop;
     };
-
     document.onmousemove = (e) => {
         if (!dragging) return;
-        windowEl.style.left = e.clientX - offsetX + "px";
-        windowEl.style.top = e.clientY - offsetY + "px";
-        windowEl.style.bottom = "auto";
+        menu.style.left = e.clientX - offsetX + "px";
+        menu.style.top = e.clientY - offsetY + "px";
+        menu.style.bottom = "auto";
     };
-
     document.onmouseup = () => (dragging = false);
 
-    // ── Close / open ─────────────────────────────────────────────
-    closeBtn.onclick = () => (windowEl.style.display = "none");
+    // ── Close / open ──────────────────────────────────────────────────────
+    closeBtn.onclick = () => (menu.style.display = "none");
 
     secretIcon.onclick = () => {
-        const isHidden = windowEl.style.display == "none";
-        windowEl.style.display = isHidden ? "flex" : "none";
+        const isHidden = menu.style.display === "none";
+        if (isHidden) {
+            // If token expired while window was closed, drop back to waiting_login
+            if (stage === "active" && !isTokenValid()) {
+                clearSession();
+                stage = "waiting_name";
+                applyStage();
+            }
+            menu.style.display = "flex";
+        } else {
+            menu.style.display = "none";
+        }
     };
 
-    let ttVisible = false;
-
-    toggleBtn.onclick = () => {
-        ttVisible = !ttVisible;
-        ttScreen.style.display = ttVisible ? "flex" : "none";
-        menuScreen.style.display = ttVisible ? "none" : "flex";
-        toggleBtn.textContent = ttVisible ? "Hide AI" : "Show AI";
+    // ── Toggle AI / Buttons ──────────────────────────────────────────────────
+    let aiVisible = false;
+    toggleMenusBtn.onclick = () => {
+        aiVisible = !aiVisible;
+        aiScreen.style.display = aiVisible ? "flex" : "none";
+        buttonsScreen.style.display = aiVisible ? "none" : "flex";
+        toggleMenusBtn.textContent = aiVisible ? "Hide AI" : "Show AI";
     };
 
-    // ── Messages ─────────────────────────────────────────────────
+    // ═════════════════════════════════════════════════════════════════════════
+    // CHAT / AI
+    // ═════════════════════════════════════════════════════════════════════════
+
     function addMessage(text, isUser) {
-        const msgPosition = document.createElement("div");
+        const pos = document.createElement("div");
         const msg = document.createElement("div");
-
         msg.className = "tt-msg " + (isUser ? "tt-user" : "tt-bot");
-        msgPosition.className = isUser ? "tt-user-position" : "tt-bot-position";
-
+        pos.className = isUser ? "tt-user-position" : "tt-bot-position";
         renderMarkdownSafe(msg, text);
-
-        msgPosition.appendChild(msg);
-        messages.appendChild(msgPosition);
+        pos.appendChild(msg);
+        messages.appendChild(pos);
         messages.scrollTop = messages.scrollHeight;
     }
 
     addMessage("I see only the last message! I think slowly and work best in English!", false);
 
-    // ── Send / stream ─────────────────────────────────────────────
     async function sendMessage(textOverride = null) {
+        // Block if not in active stage
+        if (stage !== "active") return;
+
+        // TODO: Reused at multiple places, clean up
+        if (!isTokenValid()) {
+            clearSession();
+            stage = "waiting_name";
+            return;
+        }
+
         let raw = textOverride;
         if (raw instanceof Event) raw = null;
-
         const text = (raw ?? input.value ?? "").toString().trim();
         if (!text) return;
 
         input.value = "";
         input.focus();
         autoResizeTextarea(input);
-
         addMessage(text, true);
+
+        // Fetch the AI key only once in case server crashes afterward
+        if (!aiApiKey) {
+            try {
+                const keyRes = await fetch(`${SERVER}/ai-key`, {
+                    headers: { Authorization: "Bearer " + sessionToken },
+                });
+                if (!keyRes.ok) throw new Error("key fetch failed");
+                aiApiKey = (await keyRes.json()).key;
+            } catch {
+                addMessage("⚠️ Не може да се получи AI ключ. Моля опитай пак.", false);
+                // TODO: Clears session but doesn't return to login because intended way was trough logout button. Return logout button in case of error?
+
+                // clearSession();
+                // stage = "waiting_name";
+                return;
+            }
+        }
 
         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
-            headers: {
-                Authorization: "Bearer " + CONFIG.apiKey,
-                "Content-Type": "application/json",
-            },
+            headers: { Authorization: "Bearer " + aiApiKey, "Content-Type": "application/json" },
             body: JSON.stringify({
                 model: CONFIG.model,
                 messages: [{ role: "user", content: text }],
@@ -200,45 +626,33 @@ function createFloatingMenu() {
             }),
         });
 
-        const msgPosition = document.createElement("div");
+        const pos = document.createElement("div");
         const msg = document.createElement("div");
-
         msg.className = "tt-msg tt-bot";
-        msgPosition.className = "tt-bot-position";
+        pos.className = "tt-bot-position";
         msg.textContent = "Thinking…";
-
-        msgPosition.appendChild(msg);
-        messages.appendChild(msgPosition);
+        pos.appendChild(msg);
+        messages.appendChild(pos);
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
-
         let fullText = "";
         let hasStarted = false;
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
-
-            for (const line of lines) {
+            for (const line of decoder.decode(value, { stream: true }).split("\n")) {
                 if (!line.startsWith("data:")) continue;
-
                 const jsonStr = line.slice(5).trim();
                 if (jsonStr === "[DONE]") return;
-
                 try {
-                    const json = JSON.parse(jsonStr);
-                    const token = json.choices?.[0]?.delta?.content || "";
-
+                    const token = JSON.parse(jsonStr).choices?.[0]?.delta?.content || "";
                     if (token) {
                         if (!hasStarted) {
                             msg.innerHTML = "";
                             hasStarted = true;
                         }
-
                         fullText += token;
                         msg.innerHTML = "";
                         renderMarkdownSafe(msg, fullText);
@@ -248,52 +662,44 @@ function createFloatingMenu() {
             }
         }
     }
+
     window.sendMessage = sendMessage;
 
-    input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && !e.shiftKey && ttScreen.style.display !== "none") {
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey && aiScreen.style.display !== "none") {
             e.preventDefault();
             sendMessage();
         }
     });
-
     send.addEventListener("click", sendMessage);
     input.addEventListener("input", () => autoResizeTextarea(input));
     autoResizeTextarea(input);
 }
 
-// ── Markdown helpers ──────────────────────────────────────────────
-
+// ── Markdown helpers ─────────────────────────────────────────────────────────
 function renderMarkdownSafe(container, text) {
-    const lines = text.split("\n");
-
-    lines.forEach((line) => {
-        let element;
-
+    text.split("\n").forEach((line) => {
+        let el;
         if (line.startsWith("### ")) {
-            element = document.createElement("h3");
-            element.textContent = line.slice(4);
+            el = document.createElement("h3");
+            el.textContent = line.slice(4);
         } else if (line.startsWith("## ")) {
-            element = document.createElement("h2");
-            element.textContent = line.slice(3);
+            el = document.createElement("h2");
+            el.textContent = line.slice(3);
         } else if (line.startsWith("# ")) {
-            element = document.createElement("h1");
-            element.textContent = line.slice(2);
+            el = document.createElement("h1");
+            el.textContent = line.slice(2);
         } else {
-            element = document.createElement("div");
-            renderInlineMarkdownSafe(element, line);
+            el = document.createElement("div");
+            renderInlineMarkdownSafe(el, line);
         }
-
-        container.appendChild(element);
+        container.appendChild(el);
     });
 }
 
 function renderInlineMarkdownSafe(container, text) {
-    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
-
-    parts.forEach((part) => {
+    text.split(/(\*\*.*?\*\*|\*.*?\*)/g).forEach((part) => {
         let el;
-
         if (part.startsWith("**") && part.endsWith("**")) {
             el = document.createElement("b");
             el.textContent = part.slice(2, -2);
@@ -303,30 +709,22 @@ function renderInlineMarkdownSafe(container, text) {
         } else {
             el = document.createTextNode(part);
         }
-
         container.appendChild(el);
     });
 }
 
 function autoResizeTextarea(el) {
-    const minHeight = 36;
-    const maxHeight = 150;
-
+    const min = 36,
+        max = 150;
     el.style.transition = "none";
     el.style.height = "0px";
-
-    let newHeight = el.scrollHeight;
-    if (newHeight < minHeight) newHeight = minHeight;
-
-    if (newHeight > maxHeight) {
-        newHeight = maxHeight;
+    let h = el.scrollHeight;
+    if (h < min) h = min;
+    if (h > max) {
+        h = max;
         el.classList.add("scrollable");
-    } else {
-        el.classList.remove("scrollable");
-    }
-
-    el.style.height = newHeight + "px";
-
+    } else el.classList.remove("scrollable");
+    el.style.height = h + "px";
     requestAnimationFrame(() => {
         el.style.transition = "";
     });
