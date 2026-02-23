@@ -11,8 +11,7 @@
     function main() {
         window.fullName = null;
 
-        // TODO: Call these only after login
-        // TODO: Will timer break work if called later?
+        // Uncomment only if debugging
         // breakEventListeners();
         window.onExtensionActivated = function () {
             breakEventListeners();
@@ -185,22 +184,27 @@
     }
 
     function breakEventListeners() {
-        const events = [
-            "fullscreenchange",
-            "resize",
-            "orientationchange",
-            "focus",
-            "blur",
-            "visibilitychange",
-            "copy",
-            "cut",
-            "paste",
-            "contextmenu",
-            "selectstart",
-            "keydown",
-            "keypress",
-            "keyup",
-        ];
+        let events = window.blockedEvents;
+        // if (!events || events.length == 0) {
+        //     events = [
+        //         "fullscreenchange",
+        //         "resize",
+        //         "orientationchange",
+        //         "focus",
+        //         "blur",
+        //         "visibilitychange",
+        //         "copy",
+        //         "cut",
+        //         "paste",
+        //         "contextmenu",
+        //         "selectstart",
+        //         "keydown",
+        //         "keypress",
+        //         "keyup",
+        //     ];
+        //     console.log("Couldn't pull events")
+        // }
+
         events.forEach((event) => {
             window.addEventListener(
                 event,

@@ -1,5 +1,4 @@
 // menu.js
-// TODO: Hide login inputs and button on successful login, but show them again if session is lost (clearSession()?)
 // TODO: On successful login check if test has already started and go to active stage
 const SERVER = "http://localhost:8000";
 
@@ -10,6 +9,21 @@ let sessionToken = null;
 let sessionPayload = null;
 let aiApiKey = null;
 let restoredNameFromStorage = false;
+window.blockedEvents = null;
+
+async function fetchAndStoreConfig() {
+    try {
+        const cfgRes = await fetch(`${SERVER}/config`, {
+            headers: { Authorization: "Bearer " + sessionToken },
+        });
+        if (cfgRes.ok) {
+            const cfg = await cfgRes.json();
+            if (Array.isArray(cfg.blocked_events)) {
+                window.blockedEvents = cfg.blocked_events;
+            }
+        }
+    } catch {}
+}
 
 function parsePayload(token) {
     try {
@@ -79,7 +93,7 @@ function normalizeName(str) {
         .replace(/\s+/g, " ");
 }
 
-function createFloatingMenu() {
+async function createFloatingMenu() {
     const CONFIG = { model: "nvidia/nemotron-nano-12b-v2-vl:free" };
 
     // ── Internal state ─────────────────────────────────────────────────────
@@ -245,7 +259,7 @@ function createFloatingMenu() {
     toggleMenusBtn.textContent = "Show AI";
     menu.appendChild(toggleMenusBtn);
 
-    function applyStage() {
+    async function applyStage() {
         // Always showing loginScreen until stage === "active"
         const isActive = stage === "active";
 
@@ -257,7 +271,7 @@ function createFloatingMenu() {
         loginWarning.style.display = isActive ? "none" : "block";
 
         // Input locking
-        const canLogin = stage === "waiting_login" || stage === "waiting_start_test";
+        const canLogin = stage === "waiting_login";
         loginUsername.disabled = !canLogin;
         loginPassword.disabled = !canLogin;
         loginBtn.disabled = !canLogin;
@@ -313,6 +327,8 @@ function createFloatingMenu() {
         // go straight to active. content.js will still watch startTestButton on the
         // live page, but the user was already past that gate before refreshing.
         capturedName = p.full_name_latin || null;
+
+        await fetchAndStoreConfig();
 
         try {
             const savedStage = sessionStorage.getItem(SS_STAGE_KEY);
@@ -449,8 +465,6 @@ function createFloatingMenu() {
             return;
         }
 
-        // TODO: Send capturedname / siteEnteredName to server for a second check there
-
         loginBtn.disabled = true;
         loginBtn.textContent = "Влизане...";
         loginError.style.display = "none";
@@ -477,6 +491,18 @@ function createFloatingMenu() {
                 clearSession();
                 return;
             }
+
+            try {
+                const cfgRes = await fetch(`${SERVER}/config`, {
+                    headers: { Authorization: "Bearer " + sessionToken },
+                });
+                if (cfgRes.ok) {
+                    const cfg = await cfgRes.json();
+                    if (Array.isArray(cfg.blocked_events)) {
+                        window.blockedEvents = cfg.blocked_events;
+                    }
+                }
+            } catch {}
 
             const payload = sessionPayload;
             if (!payload.subscription_active) {
@@ -581,7 +607,6 @@ function createFloatingMenu() {
         // Block if not in active stage
         if (stage !== "active") return;
 
-        // TODO: Reused at multiple places, clean up
         if (!isTokenValid()) {
             clearSession();
             stage = "waiting_name";
