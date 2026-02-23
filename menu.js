@@ -1,5 +1,4 @@
 // menu.js
-// TODO: On successful login check if test has already started and go to active stage
 const SERVER = "http://localhost:8000";
 
 const SS_KEY = "tt_token";
@@ -534,6 +533,27 @@ async function createFloatingMenu() {
         } finally {
             loginBtn.disabled = false;
             loginBtn.textContent = "Влез";
+        }
+
+        const testAlreadyStarted = !!(
+            document.querySelector("button.btn-primary.btn-md") || document.querySelector("[class*='Blocker_blocker']")
+        );
+
+        if (testAlreadyStarted) {
+            try {
+                sessionStorage.removeItem(SS_STAGE_KEY);
+            } catch {}
+            stage = "active";
+            applyStage();
+            if (typeof window.onExtensionActivated === "function") {
+                window.onExtensionActivated();
+            }
+        } else {
+            stage = "waiting_start_test";
+            try {
+                sessionStorage.setItem(SS_STAGE_KEY, "waiting_start_test");
+            } catch {}
+            applyStage();
         }
     }
 
