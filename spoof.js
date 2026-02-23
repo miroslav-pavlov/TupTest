@@ -1,3 +1,4 @@
+// spoof.js
 (function () {
     const override = (obj, prop, value) => {
         try {

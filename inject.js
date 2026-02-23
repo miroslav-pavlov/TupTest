@@ -1,3 +1,4 @@
+// inject.js
 (function () {
     const originalSetInterval = window.setInterval;
 
