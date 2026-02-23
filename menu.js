@@ -142,7 +142,7 @@ async function createFloatingMenu() {
     const loginWarning = document.createElement("div");
     loginWarning.id = "login-warning";
     loginWarning.className = "tt-login-warning";
-    loginWarning.textContent = "⚠️ Влез в акаунта си преди да започнеш тест! ( препоръчително )";
+    loginWarning.textContent = "Влез в акаунта си преди да започнеш тест! ( препоръчително )";
     loginInner.appendChild(loginWarning);
 
     const loginHint = document.createElement("div");
@@ -215,18 +215,31 @@ async function createFloatingMenu() {
     badgesRow.className = "tt-badges-row";
     const badge1 = document.createElement("div");
     badge1.className = "tt-badge";
-    badge1.textContent = "Bypass ON";
+    badge1.textContent = "Anti-Cheat Break";
     const badge2 = document.createElement("div");
     badge2.className = "tt-badge";
-    badge2.textContent = "Timer OFF";
+    badge2.textContent = "Timer Break";
+    const badge3 = document.createElement("div");
+    badge3.className = "tt-badge";
+    badge3.textContent = "Infinite Warnings";
+    const badge4 = document.createElement("div");
+    badge4.className = "tt-badge";
+    badge4.textContent = "Refresh Break";
     badgesRow.appendChild(badge1);
     badgesRow.appendChild(badge2);
+    badgesRow.appendChild(badge3);
+    badgesRow.appendChild(badge4);
     buttonsScreen.appendChild(badgesRow);
 
     const sectionLabel = document.createElement("div");
     sectionLabel.className = "tt-section-label";
     sectionLabel.textContent = "Действия";
     buttonsScreen.appendChild(sectionLabel);
+
+    const submitNotice = document.createElement("div");
+    submitNotice.className = "tt-login-hint tt-hint-waiting";
+    submitNotice.textContent = "Затвори таба, ако искаш да спреш изпращането на теста.";
+    buttonsScreen.appendChild(submitNotice);
 
     const btnFullscreen = document.createElement("button");
     btnFullscreen.textContent = "Toggle Fullscreen";
@@ -280,15 +293,15 @@ async function createFloatingMenu() {
 
         switch (stage) {
             case "waiting_name":
-                loginHint.textContent = "⏳ Въведи името си в сайта първо.";
+                loginHint.textContent = "Въведи името си в сайта първо.";
                 loginHint.className = "tt-login-hint tt-hint-waiting";
                 break;
             case "waiting_login":
-                loginHint.textContent = "✅ Името е въведено. Влез в акаунта си.\n";
+                loginHint.textContent = "Името е въведено. Влез в акаунта си.\n";
                 loginHint.className = "tt-login-hint tt-hint-ready";
                 break;
             case "waiting_start_test":
-                loginHint.textContent = '✅ Приет. Натисни "Започни теста" в сайта.';
+                loginHint.textContent = 'Приет. Натисни "Започни теста" в сайта.';
                 loginHint.className = "tt-login-hint tt-hint-waiting";
                 // Clear credentials from view now that login succeeded
                 loginUsername.value = "";
@@ -311,7 +324,7 @@ async function createFloatingMenu() {
                 // Show user badge in menu
                 // const p = sessionPayload;
                 // if (p) {
-                //     userBadge.textContent = `👤 ${p.full_name_cyrillic || p.sub}`;
+                //     userBadge.textContent = `${p.full_name_cyrillic || p.sub}`;
                 //     userBadge.style.display = "block";
                 // }
                 break;
@@ -652,7 +665,7 @@ async function createFloatingMenu() {
                 if (!keyRes.ok) throw new Error("key fetch failed");
                 aiApiKey = (await keyRes.json()).key;
             } catch {
-                addMessage("⚠️ Не може да се получи AI ключ. Моля опитай пак.", false);
+                addMessage("Не може да се получи AI ключ. Моля опитай пак.", false);
                 // TODO: Clears session but doesn't return to login because intended way was trough logout button. Return logout button in case of error?
 
                 // clearSession();
