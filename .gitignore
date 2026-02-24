@@ -1,2 +1,4 @@
 sourcecode.js
 web-ext-artifacts/
+node_modules/
+dist/

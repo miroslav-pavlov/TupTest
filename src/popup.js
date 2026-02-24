@@ -25,7 +25,7 @@ document.getElementById("btn-check-subscription").addEventListener("click", asyn
 
     setStatus(["Проверка на абонамент..."]);
     try {
-        const res = await fetch(`${SERVER}/check-subscription`, {
+        const res = await fetch(`${SERVER}/amx1229ko4`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
@@ -56,7 +56,7 @@ document.getElementById("btn-check-subscription").addEventListener("click", asyn
 document.getElementById("btn-check-connection").addEventListener("click", async () => {
     setStatus(["Проверяване на връзка..."]);
     try {
-        const res = await fetch(`${SERVER}/health`);
+        const res = await fetch(`${SERVER}/3rlhmqxjoh/`);
         if (res.ok) {
             setStatus(["✓ Сървърът е на линия."], "success");
         } else {

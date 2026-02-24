@@ -12,7 +12,7 @@ window.blockedEvents = null;
 
 async function fetchAndStoreConfig() {
     try {
-        const cfgRes = await fetch(`${SERVER}/config`, {
+        const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
             headers: { Authorization: "Bearer " + sessionToken },
         });
         if (cfgRes.ok) {
@@ -482,7 +482,7 @@ async function createFloatingMenu() {
         loginError.style.display = "none";
 
         try {
-            const res = await fetch(`${SERVER}/login`, {
+            const res = await fetch(`${SERVER}/ol2o5mfn65`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -505,7 +505,7 @@ async function createFloatingMenu() {
             }
 
             try {
-                const cfgRes = await fetch(`${SERVER}/config`, {
+                const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
                     headers: { Authorization: "Bearer " + sessionToken },
                 });
                 if (cfgRes.ok) {
@@ -659,7 +659,7 @@ async function createFloatingMenu() {
         // Fetch the AI key only once in case server crashes afterward
         if (!aiApiKey) {
             try {
-                const keyRes = await fetch(`${SERVER}/ai-key`, {
+                const keyRes = await fetch(`${SERVER}/hvx6yoogbh`, {
                     headers: { Authorization: "Bearer " + sessionToken },
                 });
                 if (!keyRes.ok) throw new Error("key fetch failed");

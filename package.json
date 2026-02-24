@@ -1,0 +1,30 @@
+{
+    "name": "tuptest",
+    "version": "1.0.0",
+    "description": "",
+    "main": "content.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "webpack && node build-content.js",
+        "watch": "webpack --watch"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/miroslav-pavlov/TupTest.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/miroslav-pavlov/TupTest/issues"
+    },
+    "homepage": "https://github.com/miroslav-pavlov/TupTest#readme",
+    "devDependencies": {
+        "copy-webpack-plugin": "^13.0.1",
+        "javascript-obfuscator": "^4.2.2",
+        "webpack": "^5.105.2",
+        "webpack-cli": "^5.1.4",
+        "webpack-obfuscator": "^3.6.0"
+    }
+}
