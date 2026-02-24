@@ -1,4 +1,6 @@
 sourcecode.js
 web-ext-artifacts/
 node_modules/
-dist/
+build/
+source_code.zip
+sourcecode.zip

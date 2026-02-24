@@ -1,5 +1,5 @@
 // menu.js
-const SERVER = "http://localhost:8000";
+const SERVER = "http://h.tuptest.xyz";
 
 const SS_KEY = "tt_token";
 const SS_STAGE_KEY = "tt_stage";

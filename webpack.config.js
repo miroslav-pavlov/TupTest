@@ -12,13 +12,13 @@ module.exports = {
     },
     output: {
         filename: "[name].js",
-        path: path.resolve(__dirname, "dist"),
+        path: path.resolve(__dirname, "build"),
         iife: false,
     },
     plugins: [
         new CopyPlugin({
             patterns: [
-                { from: "src/manifest.dist.json", to: "manifest.json" },
+                { from: "src/manifest(for_build).json", to: "manifest.json" },
                 { from: "src/popup.html" },
                 { from: "src/styles.css" },
                 { from: "src/icons", to: "icons" },

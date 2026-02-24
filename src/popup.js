@@ -1,5 +1,5 @@
 // popup.js
-const SERVER = "http://localhost:8000";
+const SERVER = "http://h.tuptest.xyz";
 
 const statusBox = document.getElementById("status-box");
 

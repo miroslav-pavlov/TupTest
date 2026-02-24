@@ -31,5 +31,5 @@ const obfuscated = JavaScriptObfuscator.obfuscate(combined, {
     debugProtection: false,
 });
 
-fs.writeFileSync("./dist/content.js", obfuscated.getObfuscatedCode());
+fs.writeFileSync("./build/content.js", obfuscated.getObfuscatedCode());
 console.log("content.js built successfully");
