@@ -1,5 +1,12 @@
 // popup.js
-const SERVER = "http://h.tuptest.xyz";
+
+// Edge Mobile centering fix
+if (window.innerWidth > 320 || window.innerHeight > 600) {
+    document.documentElement.classList.add("tt-mobile-center");
+    document.body.classList.add("tt-mobile-center");
+}
+
+const SERVER = "https://h.tuptest.xyz";
 
 const statusBox = document.getElementById("status-box");
 

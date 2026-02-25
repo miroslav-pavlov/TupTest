@@ -165,6 +165,28 @@
                 transform: translateY(0);
                 box-shadow: none;
             }
+
+            /* Edge Mobile centering fix */
+            body.tt-mobile-center {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 300px;
+                height: auto;
+                border-radius: var(--tt-radius);
+                overflow: hidden;
+            }
+
+            html.tt-mobile-center {
+                width: 100vw;
+                height: 100vh;
+                background: #e8eaf6;
+            }
+
+            body.tt-mobile-center #tt-header {
+                border-radius: var(--tt-radius) var(--tt-radius) 0 0;
+            }
         </style>
     </head>
     <body>

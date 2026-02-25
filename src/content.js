@@ -209,6 +209,9 @@
             window.addEventListener(
                 event,
                 (e) => {
+                    // Allow Tab hotkey to always pass through
+                    if (e.key === "Tab") return;
+
                     const target = e.target;
                     if (target instanceof Element && target.closest("#tt-window")) return;
                     e.stopImmediatePropagation();

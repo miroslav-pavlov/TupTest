@@ -1,5 +1,5 @@
 // menu.js
-const SERVER = "http://h.tuptest.xyz";
+const SERVER = "https://h.tuptest.xyz";
 
 const SS_KEY = "tt_token";
 const SS_STAGE_KEY = "tt_stage";
@@ -609,6 +609,17 @@ async function createFloatingMenu() {
             menu.style.display = "none";
         }
     };
+
+    document.addEventListener(
+        "keydown",
+        (e) => {
+            if (e.key === "Tab") {
+                e.preventDefault();
+                secretIcon.click();
+            }
+        },
+        true,
+    );
 
     // ── Toggle AI / Buttons ──────────────────────────────────────────────────
     let aiVisible = false;
