@@ -145,6 +145,12 @@ async function createFloatingMenu() {
     loginWarning.textContent = "Влез в акаунта си преди да започнеш тест! ( препоръчително )";
     loginInner.appendChild(loginWarning);
 
+    const tabHint = document.createElement("div");
+    tabHint.id = "tab-hint";
+    tabHint.className = "tt-login-hint tt-hint-waiting";
+    tabHint.textContent = "С бутона TAB можеш да скриеш менюто.";
+    loginInner.appendChild(tabHint);
+
     const loginHint = document.createElement("div");
     loginHint.id = "login-hint";
     loginHint.className = "tt-login-hint";
