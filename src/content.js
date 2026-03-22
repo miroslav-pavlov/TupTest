@@ -2,6 +2,13 @@
 (function () {
     "use strict";
 
+    window.ttIsOnMobile = (function () {
+        const realUA = navigator.userAgent;
+        const realMaxTouch = navigator.maxTouchPoints;
+        const realWidth = screen.width;
+        return /Mobi|Android|iPhone|iPad|IEMobile/i.test(realUA) || realMaxTouch > 0 || realWidth < 768;
+    })();
+
     // Force Desktop Environment
     const script = document.createElement("script");
     script.src = chrome.runtime.getURL("spoof.js");
@@ -11,31 +18,23 @@
     function main() {
         window.fullName = null;
 
-        // Uncomment only if debugging
-        // breakEventListeners();
         window.onExtensionActivated = function () {
             breakEventListeners();
             breakTimer();
         };
 
+        // Build floating menu
         createFloatingMenu();
-
-        const btnFullscreen = document.getElementById("btn-fullscreen");
-        enableFullscreenButton(btnFullscreen);
-
-        const btnBack = document.getElementById("btn-back");
-        enableBackButton(btnBack);
-
-        const btnCopy = document.getElementById("btn-copy");
-        enableCopyButton(btnCopy);
-
-        const btnAskAI = document.getElementById("btn-ask-ai");
-        enableAskAIButton(btnAskAI);
+        enableFullscreenButton(document.getElementById("btn-fullscreen"));
+        enableBackButton(document.getElementById("btn-back"));
+        enableCopyButton(document.getElementById("btn-copy"));
+        enableAskAIButton(document.getElementById("btn-ask-ai"));
 
         // Kick off the name-capture / site-button watcher
         startNameFlow();
     }
 
+    //TODO: On start autofill name and number. On fullNameBtn try to log in with saved info.
     let fullNameBtnObserver = null;
     let returnBtnObserver = null;
     let startTestBtnObserver = null;
@@ -323,7 +322,7 @@
         btnObject.onclick = function () {
             const text = getFormattedQuestion(false);
             const toggleBtn = document.getElementById("tt-toggle");
-            if (toggleBtn && toggleBtn.textContent === "Show AI") toggleBtn.click();
+            if (toggleBtn && toggleBtn.textContent === "Покажи AI") toggleBtn.click();
             window.sendMessage(text);
         };
     }

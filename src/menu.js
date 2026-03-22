@@ -139,22 +139,18 @@ async function createFloatingMenu() {
     loginInner.id = "login-inner";
     loginScreen.appendChild(loginInner);
 
-    const loginWarning = document.createElement("div");
-    loginWarning.id = "login-warning";
-    loginWarning.className = "tt-login-warning";
-    loginWarning.textContent = "Влез в акаунта си преди да започнеш тест! ( препоръчително )";
-    loginInner.appendChild(loginWarning);
+    if (!window.ttIsOnMobile) {
+        const tipTab = document.createElement("div");
+        tipTab.id = "tab-hint";
+        tipTab.className = "tt-tip-login-base tt-tip-login-waiting";
+        tipTab.textContent = "С бутона TAB можеш да скриеш менюто.";
+        loginInner.appendChild(tipTab);
+    }
 
-    const tabHint = document.createElement("div");
-    tabHint.id = "tab-hint";
-    tabHint.className = "tt-login-hint tt-hint-waiting";
-    tabHint.textContent = "С бутона TAB можеш да скриеш менюто.";
-    loginInner.appendChild(tabHint);
-
-    const loginHint = document.createElement("div");
-    loginHint.id = "login-hint";
-    loginHint.className = "tt-login-hint";
-    loginInner.appendChild(loginHint);
+    const tipLoginHint = document.createElement("div");
+    tipLoginHint.id = "login-hint";
+    tipLoginHint.className = "tt-tip-login-warning";
+    loginInner.appendChild(tipLoginHint);
 
     const loginTitle = document.createElement("div");
     loginTitle.className = "tt-section-label";
@@ -243,7 +239,7 @@ async function createFloatingMenu() {
     buttonsScreen.appendChild(sectionLabel);
 
     const submitNotice = document.createElement("div");
-    submitNotice.className = "tt-login-hint tt-hint-waiting";
+    submitNotice.className = "tt-tip-login-base tt-tip-login-waiting";
     submitNotice.textContent = "Затвори таба, ако искаш да спреш изпращането на теста.";
     buttonsScreen.appendChild(submitNotice);
 
@@ -274,7 +270,7 @@ async function createFloatingMenu() {
     const toggleMenusBtn = document.createElement("button");
     toggleMenusBtn.id = "tt-toggle";
     toggleMenusBtn.style.display = "none";
-    toggleMenusBtn.textContent = "Show AI";
+    toggleMenusBtn.textContent = "Покажи AI";
     menu.appendChild(toggleMenusBtn);
 
     async function applyStage() {
@@ -285,8 +281,7 @@ async function createFloatingMenu() {
         buttonsScreen.style.display = isActive ? "flex" : "none";
         aiScreen.style.display = "none";
         toggleMenusBtn.style.display = isActive ? "block" : "none";
-        if (isActive) toggleMenusBtn.textContent = "Show AI";
-        loginWarning.style.display = isActive ? "none" : "block";
+        if (isActive) toggleMenusBtn.textContent = "Покажи AI";
 
         // Input locking
         const canLogin = stage === "waiting_login";
@@ -299,16 +294,16 @@ async function createFloatingMenu() {
 
         switch (stage) {
             case "waiting_name":
-                loginHint.textContent = "Въведи името си в сайта първо.";
-                loginHint.className = "tt-login-hint tt-hint-waiting";
+                tipLoginHint.textContent = "Влез в акаунта си преди да започнеш тест! Първо въведи името си в сайта.";
+                tipLoginHint.className = "tt-tip-login-base tt-tip-login-warning";
                 break;
             case "waiting_login":
-                loginHint.textContent = "Името е въведено. Влез в акаунта си.\n";
-                loginHint.className = "tt-login-hint tt-hint-ready";
+                tipLoginHint.textContent = "Влез в акаунта си.\n";
+                tipLoginHint.className = "tt-tip-login-base tt-tip-login-waiting";
                 break;
             case "waiting_start_test":
-                loginHint.textContent = 'Приет. Натисни "Започни теста" в сайта.';
-                loginHint.className = "tt-login-hint tt-hint-waiting";
+                tipLoginHint.textContent = 'Приет! Натисни "Започни теста" в сайта.';
+                tipLoginHint.className = "tt-tip-login-base tt-tip-login-ready";
                 // Clear credentials from view now that login succeeded
                 loginUsername.value = "";
                 loginPassword.value = "";
@@ -327,7 +322,7 @@ async function createFloatingMenu() {
                 }
                 // ------   Removed user badge
 
-                // Show user badge in menu
+                // Покажи user badge in menu
                 // const p = sessionPayload;
                 // if (p) {
                 //     userBadge.textContent = `${p.full_name_cyrillic || p.sub}`;
@@ -633,7 +628,12 @@ async function createFloatingMenu() {
         aiVisible = !aiVisible;
         aiScreen.style.display = aiVisible ? "flex" : "none";
         buttonsScreen.style.display = aiVisible ? "none" : "flex";
-        toggleMenusBtn.textContent = aiVisible ? "Hide AI" : "Show AI";
+        toggleMenusBtn.textContent = aiVisible ? "Скрий AI" : "Покажи AI";
+        if (aiVisible && !window.ttIsOnMobile) {
+            input.focus();
+        } else {
+            document.activeElement?.blur();
+        }
     };
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -651,7 +651,7 @@ async function createFloatingMenu() {
         messages.scrollTop = messages.scrollHeight;
     }
 
-    addMessage("I see only the last message! I think slowly and work best in English!", false);
+    addMessage("I am a free AI! I see only the last message, think slowly and work best in English!", false);
 
     async function sendMessage(textOverride = null) {
         // Block if not in active stage
@@ -669,7 +669,11 @@ async function createFloatingMenu() {
         if (!text) return;
 
         input.value = "";
-        input.focus();
+        if (!window.ttIsOnMobile) {
+            input.focus();
+        } else {
+            document.activeElement?.blur();
+        }
         autoResizeTextarea(input);
         addMessage(text, true);
 
