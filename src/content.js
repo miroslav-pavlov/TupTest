@@ -1,4 +1,5 @@
 // content.js
+// TODO: If site URL changes to another test then clear session
 (function () {
     "use strict";
 
@@ -15,6 +16,7 @@
     script.async = false;
     document.documentElement.prepend(script);
 
+    console.log("ALO???")
     function main() {
         window.fullName = null;
 
@@ -24,7 +26,7 @@
         };
 
         // Build floating menu
-        createFloatingMenu();
+        createFloatingMenu(window.ttIsOnMobile);
         enableFullscreenButton(document.getElementById("btn-fullscreen"));
         enableBackButton(document.getElementById("btn-back"));
         enableCopyButton(document.getElementById("btn-copy"));
@@ -325,11 +327,6 @@
             if (toggleBtn && toggleBtn.textContent === "Покажи AI") toggleBtn.click();
             window.sendMessage(text);
         };
-    }
-
-    function numberToLetter(num) {
-        if (num >= 1 && num <= 26) return String.fromCharCode(96 + num);
-        return num;
     }
 
     waitForBody(main);
