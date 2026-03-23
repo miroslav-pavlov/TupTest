@@ -2,6 +2,7 @@
 let aiApiKey = null;
 window.blockedEvents = null;
 const CONFIG = { model: "nvidia/nemotron-nano-12b-v2-vl:free" };
+const SERVER = "https://h.tuptest.xyz";
 
 // Fetch AI API Key only once in case of server failure
 async function requestAiApiKey(sessionToken) {
@@ -20,16 +21,4 @@ async function requestAiApiKey(sessionToken) {
     }
 }
 
-async function fetchAndStoreConfig() {
-    try {
-        const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
-            headers: { Authorization: "Bearer " + sessionToken },
-        });
-        if (cfgRes.ok) {
-            const cfg = await cfgRes.json();
-            if (Array.isArray(cfg.blocked_events)) {
-                window.blockedEvents = cfg.blocked_events;
-            }
-        }
-    } catch {}
-}
+

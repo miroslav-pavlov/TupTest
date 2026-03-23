@@ -4,8 +4,12 @@ const fs = require("fs");
 
 const menu = fs.readFileSync("./src/menu.js", "utf8");
 const content = fs.readFileSync("./src/content.js", "utf8");
+const auth = fs.readFileSync("./src/auth.js", "utf8");
+const config = fs.readFileSync("./src/config.js", "utf8");
+const ui = fs.readFileSync("./src/ui.js", "utf8");
+const utils = fs.readFileSync("./src/utils.js", "utf8");
 
-const combined = menu + "\n" + content;
+const combined = `${menu}\n${content}\n${auth}\n${config}\n${ui}\n${utils}`;
 
 const obfuscated = JavaScriptObfuscator.obfuscate(combined, {
     identifierNamesGenerator: "hexadecimal",

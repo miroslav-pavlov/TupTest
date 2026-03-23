@@ -1,5 +1,6 @@
 // auth.js
-const SERVER = "https://h.tuptest.xyz";
+// moved to config.js
+// const SERVER = "https://h.tuptest.xyz";
 
 const SS_KEY = "tt_token";
 const SS_STAGE_KEY = "tt_stage";
@@ -66,110 +67,18 @@ function isTokenValid() {
     } catch {}
 })();
 
-// TODO: Too interwieved with menu.js. Return to menu.js only status and let menu.js handle rendering
-async function doLogin() {
-    if (stage !== "waiting_login") return;
-
-    const username = loginUsername.value.trim();
-    const password = loginPassword.value.trim();
-
-    if (!username || !password) {
-        loginError.textContent = "Моля въведи потребителско име и парола.";
-        loginError.style.display = "block";
-        return;
-    }
-
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Влизане...";
-    loginError.style.display = "none";
-
+async function fetchAndStoreConfig(sessionToken) {
     try {
-        const res = await fetch(`${SERVER}/ol2o5mfn65`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
+        const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
+            headers: { Authorization: "Bearer " + sessionToken },
         });
-        const data = await res.json();
-
-        if (!res.ok || !data.access_token) {
-            loginError.textContent = data.detail || "Грешно потребителско име или парола.";
-            loginError.style.display = "block";
-            return;
-        }
-
-        storeSession(data.access_token);
-
-        if (!isTokenValid()) {
-            loginError.textContent = "Получен е невалиден токен от сървъра.";
-            loginError.style.display = "block";
-            clearSession();
-            return;
-        }
-
-        try {
-            const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
-                headers: { Authorization: "Bearer " + sessionToken },
-            });
-            if (cfgRes.ok) {
-                const cfg = await cfgRes.json();
-                if (Array.isArray(cfg.blocked_events)) {
-                    window.blockedEvents = cfg.blocked_events;
-                }
+        if (cfgRes.ok) {
+            const cfg = await cfgRes.json();
+            if (Array.isArray(cfg.blocked_events)) {
+                window.blockedEvents = cfg.blocked_events;
             }
-        } catch {}
-
-        const payload = sessionPayload;
-        if (!payload.subscription_active) {
-            loginError.textContent = "Абонаментът не е активен. Свържи се с администратор.";
-            loginError.style.display = "block";
-            clearSession();
-            return;
         }
-
-        if (capturedName && !namesMatch(capturedName)) {
-            const expectedLatin = payload.full_name_latin || "";
-            const expectedCyrillic = payload.full_name_cyrillic || "";
-            loginError.textContent = `Името не съвпада - върни се и го поправи.\nВъведено:\n${capturedName}\nРегистрирано:\n${expectedCyrillic}\n${expectedLatin}`;
-            loginError.style.display = "block";
-            clearSession();
-            return;
-        }
-
-        // Success — but stay on login screen until startTestButton is pressed
-        stage = "waiting_start_test";
-        try {
-            sessionStorage.setItem(SS_STAGE_KEY, "waiting_start_test");
-        } catch {}
-        applyStage();
-    } catch (e) {
-        loginError.textContent = "Проблем с връзката към сървъра.";
-        loginError.style.display = "block";
-        console.error(e);
-    } finally {
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Влез";
-    }
-
-    const testAlreadyStarted = !!(
-        document.querySelector("button.btn-primary.btn-md") || document.querySelector("[class*='Blocker_blocker']")
-    );
-
-    if (testAlreadyStarted) {
-        try {
-            sessionStorage.removeItem(SS_STAGE_KEY);
-        } catch {}
-        stage = "active";
-        applyStage();
-        if (typeof window.onExtensionActivated === "function") {
-            window.onExtensionActivated();
-        }
-    } else {
-        stage = "waiting_start_test";
-        try {
-            sessionStorage.setItem(SS_STAGE_KEY, "waiting_start_test");
-        } catch {}
-        applyStage();
-    }
+    } catch {}
 }
 
 function namesMatch(userName) {

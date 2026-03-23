@@ -1,5 +1,5 @@
 // content.js
-// TODO: If site URL changes to another test then clear session
+// TODO: If site URL changes to another test then clear session so user can't reuse sessions
 (function () {
     "use strict";
 
@@ -16,7 +16,6 @@
     script.async = false;
     document.documentElement.prepend(script);
 
-    console.log("ALO???")
     function main() {
         window.fullName = null;
 

@@ -34,8 +34,8 @@ function createMenu(isOnMobile = false) {
     loginInner.id = "login-inner";
     screenLogin.appendChild(loginInner);
 
+    const tipTab = document.createElement("div");
     if (!isOnMobile) {
-        const tipTab = document.createElement("div");
         tipTab.id = "tab-hint";
         tipTab.className = "tt-tip-login-base tt-tip-login-waiting";
         tipTab.textContent = "С бутона TAB можеш да скриеш менюто.";
@@ -189,7 +189,11 @@ function createMenu(isOnMobile = false) {
     closeBtn.onclick = () => (menu.style.display = "none");
 
     secretIcon.onclick = () => {
-        // const isHidden = menu.style.display === "none";
+        if (menu.style.display === "none") {
+            menu.style.display = "flex";
+        } else {
+            menu.style.display = "none";
+        }
     };
 
     document.addEventListener(
@@ -218,20 +222,13 @@ function createMenu(isOnMobile = false) {
     };
 
     return {
-        // Root elements
-        secretIcon,
-        menu,
-
         // Screens
-        loginScreen: screenLogin,
-        aiScreen: screenAI,
-        buttonsScreen: screenButtons,
+        screenLogin,
+        screenAI,
+        screenButtons,
 
         // Login screen elements
-        loginInner,
-        tipTab,
         tipLoginHint,
-        loginTitle,
         loginUsername,
         loginPassword,
         loginError,
@@ -239,27 +236,10 @@ function createMenu(isOnMobile = false) {
 
         // AI screen elements
         messages,
-        inputArea,
         input,
         send,
 
-        // Buttons screen elements
-        badgesRow,
-        badge1,
-        badge2,
-        badge3,
-        badge4,
-        sectionLabel,
-        submitNotice,
-        btnFullscreen,
-        btnBack,
-        btnCopy,
-        btnAskAI,
-
         // Header
-        header,
-        title,
-        closeBtn,
         toggleMenusBtn,
     };
 }

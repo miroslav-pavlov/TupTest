@@ -13,22 +13,15 @@ async function createFloatingMenu(isOnMobile = false) {
         screenLogin,
         screenAI,
         screenButtons,
+        tipLoginHint,
         loginUsername,
         loginPassword,
-        loginBtn,
         loginError,
-        tipLoginHint,
+        loginBtn,
         messages,
         input,
-        header,
-        closeBtn,
+        send,
         toggleMenusBtn,
-        secretIcon,
-        menu,
-        btnFullscreen,
-        btnBack,
-        btnCopy,
-        btnAskAI,
     } = createMenu(isOnMobile);
 
     async function applyStage() {
@@ -92,7 +85,7 @@ async function createFloatingMenu(isOnMobile = false) {
         // live page, but the user was already past that gate before refreshing.
         capturedName = p.full_name_latin || null;
 
-        await fetchAndStoreConfig();
+        await fetchAndStoreConfig(sessionToken);
 
         try {
             const savedStage = sessionStorage.getItem(SS_STAGE_KEY);
@@ -116,8 +109,6 @@ async function createFloatingMenu(isOnMobile = false) {
         // No valid token — check if the user already entered their name before the reload
         try {
             const savedName = sessionStorage.getItem("tt_captured_name");
-            console.log("found saved name");
-            console.log(savedName);
             if (savedName) {
                 capturedName = savedName;
                 stage = "waiting_login";
@@ -128,10 +119,119 @@ async function createFloatingMenu(isOnMobile = false) {
         } catch {
             stage = "waiting_name";
         }
-        console.log(`stage is ${stage}`);
         applyStage();
     }
 
+    // TODO: Too interwieved with menu.js. Move to auth.js and return only status and let menu.js handle rendering
+    async function doLogin() {
+        if (stage !== "waiting_login") return;
+
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+
+        if (!username || !password) {
+            loginError.textContent = "Моля въведи потребителско име и парола.";
+            loginError.style.display = "block";
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Влизане...";
+        loginError.style.display = "none";
+
+        try {
+            const res = await fetch(`${SERVER}/ol2o5mfn65`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.access_token) {
+                loginError.textContent = data.detail || "Грешно потребителско име или парола.";
+                loginError.style.display = "block";
+                return;
+            }
+
+            storeSession(data.access_token);
+
+            if (!isTokenValid()) {
+                loginError.textContent = "Получен е невалиден токен от сървъра.";
+                loginError.style.display = "block";
+                clearSession();
+                return;
+            }
+
+            try {
+                const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
+                    headers: { Authorization: "Bearer " + sessionToken },
+                });
+                if (cfgRes.ok) {
+                    const cfg = await cfgRes.json();
+                    if (Array.isArray(cfg.blocked_events)) {
+                        window.blockedEvents = cfg.blocked_events;
+                    }
+                }
+            } catch {}
+
+            const payload = sessionPayload;
+            if (!payload.subscription_active) {
+                loginError.textContent = "Абонаментът не е активен. Свържи се с администратор.";
+                loginError.style.display = "block";
+                clearSession();
+                return;
+            }
+
+            if (capturedName && !namesMatch(capturedName)) {
+                const expectedLatin = payload.full_name_latin || "";
+                const expectedCyrillic = payload.full_name_cyrillic || "";
+                loginError.textContent = `Името не съвпада - върни се и го поправи.\nВъведено:\n${capturedName}\nРегистрирано:\n${expectedCyrillic}\n${expectedLatin}`;
+                loginError.style.display = "block";
+                clearSession();
+                return;
+            }
+
+            // Success — but stay on login screen until startTestButton is pressed
+            // TODO: Request AI API Key at login in case of server failure afterwards
+            // FIXME: Tomprarily move requestAiApiKey. Maybe there is a better place for it around here
+            requestAiApiKey(sessionToken);
+            stage = "waiting_start_test";
+            try {
+                sessionStorage.setItem(SS_STAGE_KEY, "waiting_start_test");
+            } catch {}
+            applyStage();
+        } catch (e) {
+            loginError.textContent = "Проблем с връзката към сървъра.";
+            loginError.style.display = "block";
+            console.error(e);
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Влез";
+        }
+
+        const testAlreadyStarted = !!(
+            document.querySelector("button.btn-primary.btn-md") || document.querySelector("[class*='Blocker_blocker']")
+        );
+
+        if (testAlreadyStarted) {
+            try {
+                sessionStorage.removeItem(SS_STAGE_KEY);
+            } catch {}
+            stage = "active";
+            applyStage();
+            if (typeof window.onExtensionActivated === "function") {
+                window.onExtensionActivated();
+            }
+        } else {
+            stage = "waiting_start_test";
+            try {
+                sessionStorage.setItem(SS_STAGE_KEY, "waiting_start_test");
+            } catch {}
+            applyStage();
+        }
+    }
+
+    // TODO: Rewrite callbacks to be more secure as anyone can call window.___ and set logged in to true
     // ═════════════════════════════════════════════════════════════════════════
     // CALLBACKS CALLED BY content.js
     // ═════════════════════════════════════════════════════════════════════════
@@ -232,8 +332,6 @@ async function createFloatingMenu(isOnMobile = false) {
         autoResizeTextarea(input);
         addMessage(text, true);
 
-        // TODO: Request AI API Key at login in case of  server failure afterwards
-        aiApiKey = requestAiApiKey(sessionToken);
         if (!aiApiKey) {
             addMessage("Не може да се получи AI ключ. Моля опитай пак.", false);
             // TODO: Clears session but doesn't return to login because intended way was trough logout button. Return logout button in case of error?
@@ -247,6 +345,7 @@ async function createFloatingMenu(isOnMobile = false) {
             method: "POST",
             headers: { Authorization: "Bearer " + aiApiKey, "Content-Type": "application/json" },
             body: JSON.stringify({
+                // TODO: do smt about CONFIG.model
                 model: CONFIG.model,
                 messages: [{ role: "user", content: text }],
                 stream: true,
