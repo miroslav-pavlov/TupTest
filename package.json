@@ -6,6 +6,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "webpack && node build-content.js",
+        "build:dev": "cross-env NODE_ENV=development webpack && cross-env NODE_ENV=development node build-content.js",
         "watch": "webpack --watch"
     },
     "repository": {
@@ -22,6 +23,7 @@
     "homepage": "https://github.com/miroslav-pavlov/TupTest#readme",
     "devDependencies": {
         "copy-webpack-plugin": "^13.0.1",
+        "cross-env": "^10.1.0",
         "javascript-obfuscator": "^4.2.2",
         "webpack": "^5.105.2",
         "webpack-cli": "^5.1.4",

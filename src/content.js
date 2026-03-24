@@ -9,18 +9,12 @@
         return /Mobi|Android|iPhone|iPad|IEMobile/i.test(realUA) || realMaxTouch > 0 || realWidth < 768;
     })();
 
-    // Force Desktop Environment
-    const script = document.createElement("script");
-    script.src = chrome.runtime.getURL("spoof.js");
-    script.async = false;
-    document.documentElement.prepend(script);
-
     function main() {
         window.fullName = null;
 
         window.onExtensionActivated = function () {
             breakEventListeners();
-            breakTimer();
+            breakTimersAndCounters();
         };
 
         // Build floating menu
@@ -219,13 +213,32 @@
         });
     }
 
-    function breakTimer() {
-        const s = document.createElement("script");
-        s.src = chrome.runtime.getURL("inject.js");
-        s.onload = function () {
-            s.remove();
+    function breakTimersAndCounters() {
+        // ── Timer break ───────────────────────────────────────────────────────
+        const originalSetInterval = window.setInterval;
+
+        window.setInterval = function (callback, delay) {
+            if (delay === 1000) {
+                const str = callback.toString();
+                const isQuestionTimer = str.includes("return e-1") && !str.includes("calcTimeDelta");
+                if (isQuestionTimer) return 0;
+            }
+            return originalSetInterval.apply(this, arguments);
         };
-        (document.head || document.documentElement).appendChild(s);
+
+        // ── Cheating counter + refresh detection break ─────────────────────
+        const _origGetItem = localStorage.getItem.bind(localStorage);
+        const _origSetItem = localStorage.setItem.bind(localStorage);
+
+        localStorage.getItem = function (key) {
+            if (key && (key.startsWith("ct-") || key.startsWith("sm-"))) return null;
+            return _origGetItem(key);
+        };
+
+        localStorage.setItem = function (key, value) {
+            if (key && (key.startsWith("ct-") || key.startsWith("sm-"))) return;
+            return _origSetItem(key, value);
+        };
     }
 
     function enableFullscreenButton(btnObject) {
