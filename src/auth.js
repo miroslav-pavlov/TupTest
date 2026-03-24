@@ -45,6 +45,7 @@ function isTokenValid() {
     return sessionPayload.exp && sessionPayload.exp > Math.floor(Date.now() / 1000);
 }
 
+// TODO: If site URL changes to another test then clear session so user can't reuse sessions
 // ── Restore session from sessionStorage on script load ────────────────────
 // Runs once when the content script is injected (i.e. on every page load/
 // refresh). If a valid token is found the stage will be restored below.

@@ -123,6 +123,7 @@ async function createFloatingMenu(isOnMobile = false) {
     }
 
     // TODO: Too interwieved with menu.js. Move to auth.js and return only status and let menu.js handle rendering
+    // TODO: On start autofill name and number. On fullNameBtn try to log in with saved info.
     async function doLogin() {
         if (stage !== "waiting_login") return;
 
@@ -192,8 +193,7 @@ async function createFloatingMenu(isOnMobile = false) {
             }
 
             // Success — but stay on login screen until startTestButton is pressed
-            // TODO: Request AI API Key at login in case of server failure afterwards
-            // FIXME: Tomprarily move requestAiApiKey. Maybe there is a better place for it around here
+            // TODO: Request AI API Key at login in case of server failure afterwards. (fiex but maybe there is a batter place to do it)
             requestAiApiKey(sessionToken);
             stage = "waiting_start_test";
             try {
@@ -231,7 +231,7 @@ async function createFloatingMenu(isOnMobile = false) {
         }
     }
 
-    // TODO: Rewrite callbacks to be more secure as anyone can call window.___ and set logged in to true
+    // TODO: Rewrite callbacks to be more secure as anyone can call window.<something> and set logged in to true
     // ═════════════════════════════════════════════════════════════════════════
     // CALLBACKS CALLED BY content.js
     // ═════════════════════════════════════════════════════════════════════════
@@ -334,8 +334,8 @@ async function createFloatingMenu(isOnMobile = false) {
 
         if (!aiApiKey) {
             addMessage("Не може да се получи AI ключ. Моля опитай пак.", false);
-            // TODO: Clears session but doesn't return to login because intended way was trough logout button. Return logout button in case of error?
 
+            // TODO: Clears session but doesn't return to login because intended way was trough logout button. Return logout button in case of error?
             // clearSession();
             // stage = "waiting_name";
             return;
@@ -345,7 +345,7 @@ async function createFloatingMenu(isOnMobile = false) {
             method: "POST",
             headers: { Authorization: "Bearer " + aiApiKey, "Content-Type": "application/json" },
             body: JSON.stringify({
-                // TODO: do smt about CONFIG.model
+                // TODO: Do something about CONFIG.moDel
                 model: CONFIG.model,
                 messages: [{ role: "user", content: text }],
                 stream: true,

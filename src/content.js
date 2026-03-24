@@ -1,5 +1,4 @@
 // content.js
-// TODO: If site URL changes to another test then clear session so user can't reuse sessions
 (function () {
     "use strict";
 
@@ -35,7 +34,6 @@
         startNameFlow();
     }
 
-    //TODO: On start autofill name and number. On fullNameBtn try to log in with saved info.
     let fullNameBtnObserver = null;
     let returnBtnObserver = null;
     let startTestBtnObserver = null;
