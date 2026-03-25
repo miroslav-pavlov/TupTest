@@ -1,5 +1,10 @@
 // spoof.js
 (function () {
+    const realUA = navigator.userAgent;
+    const realMaxTouch = navigator.maxTouchPoints;
+    const realWidth = screen.width;
+    window.ttIsOnMobile = /Mobi|Android|iPhone|iPad|IEMobile/i.test(realUA) || realMaxTouch > 0 || realWidth < 768;
+
     const override = (obj, prop, value) => {
         try {
             Object.defineProperty(obj, prop, {

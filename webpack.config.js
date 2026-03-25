@@ -9,21 +9,22 @@ module.exports = {
     devtool: isDev ? "inline-source-map" : false,
     entry: {
         // inject: "./src/inject.js",
-        popup: "./src/popup.js",
+        // popup: "./src/popup.js",
         spoof: "./src/spoof.js",
     },
     output: {
         filename: "[name].js",
-        path: path.resolve(__dirname, "build"),
+        // path: path.resolve(__dirname, "build"),
+        path: path.resolve(__dirname, "C:/Users/mirko/Projects/TupTest/TupTestServer/modmenu"),
         iife: false,
     },
     plugins: [
         new CopyPlugin({
             patterns: [
-                { from: "src/manifest(for_build).json", to: "manifest.json" },
-                { from: "src/popup.html" },
+                // { from: "src/manifest(for_build).json", to: "manifest.json" },
+                // { from: "src/popup.html" },
                 { from: "src/styles.css" },
-                { from: "src/icons", to: "icons" },
+                // { from: "src/icons", to: "icons" },
             ],
         }),
         ...(!isDev ? [

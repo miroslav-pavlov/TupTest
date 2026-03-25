@@ -15,7 +15,6 @@
     --tt-transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Secret icon ───────────────────────────────────────────── */
 #secret-icon {
     position: fixed;
     top: 20px;
@@ -27,7 +26,6 @@
     z-index: 999999;
 }
 
-/* ── Main window ───────────────────────────────────────────── */
 #tt-window {
     position: fixed;
     bottom: 24px;
@@ -68,7 +66,6 @@
     }
 }
 
-/* ── Header ────────────────────────────────────────────────── */
 #tt-header {
     background: linear-gradient(135deg, var(--tt-primary) 0%, var(--tt-primary-light) 100%);
     color: white;
@@ -81,7 +78,7 @@
     cursor: move;
     z-index: 999999;
     letter-spacing: 0.02em;
-    user-select: none;
+    /* user-select: none; */
 }
 
 #tt-header::after {
@@ -113,7 +110,6 @@
     background: rgba(255, 255, 255, 0.28);
 }
 
-/* ── Content area ──────────────────────────────────────────── */
 #tt-content {
     flex: 1;
     position: relative;
@@ -126,14 +122,12 @@
     background: white;
 }
 
-/* ── Chat screen ───────────────────────────────────────────── */
 #tt-screen {
     display: flex;
     flex-direction: column;
     font-family: Nunito, Helvetica, sans-serif !important;
 }
 
-/* ── Menu screen ───────────────────────────────────────────── */
 #buttons-screen {
     display: none;
     flex-direction: column;
@@ -144,7 +138,6 @@
     overflow-y: auto;
 }
 
-/* Status badges row */
 .tt-badges-row {
     display: flex;
     gap: 8px;
@@ -188,7 +181,6 @@
     }
 }
 
-/* Section label */
 .tt-section-label {
     font-size: 10px;
     font-weight: 700;
@@ -198,7 +190,6 @@
     margin: 10px 2px 6px;
 }
 
-/* Menu buttons override */
 #buttons-screen > * {
     z-index: 999999;
 }
@@ -210,7 +201,6 @@
     box-sizing: border-box;
 }
 
-/* ── Messages ──────────────────────────────────────────────── */
 #tt-messages {
     flex: 1;
     overflow-y: auto;
@@ -288,7 +278,6 @@
     margin-bottom: 10px;
 }
 
-/* ── Input area ────────────────────────────────────────────── */
 #tt-input-area {
     display: flex;
     gap: 8px;
@@ -334,7 +323,6 @@
     box-shadow: 0 0 0 3px rgba(57, 77, 168, 0.1);
 }
 
-/* ── Buttons ───────────────────────────────────────────────── */
 .tt-button,
 #tt-toggle {
     background: var(--tt-button);
@@ -367,7 +355,6 @@
     box-shadow: none;
 }
 
-/* ── Bottom toggle ─────────────────────────────────────────── */
 #tt-toggle {
     width: calc(100% - 24px);
     margin: 0 12px 12px;
@@ -377,13 +364,11 @@
     letter-spacing: 0.02em;
 }
 
-/* ── Warning ───────────────────────────────────────────────── */
 #warning-text {
     color: #e03e3e;
     font-size: 11.5px;
 }
 
-/* ── Login screen ──────────────────────────────────────────────────────── */
 #login-screen {
     flex-direction: column;
     justify-content: center;
@@ -407,8 +392,6 @@
     text-align: center;
 }
 
-/* ── Stage hint banner ─────────────────────────────────────────────────── */
-/* Shown above the login form; changes text + colour per stage             */
 .tt-tip-login-base {
     font-size: 12px;
     font-weight: 600;
@@ -437,7 +420,6 @@
     border: 1px solid rgba(224, 62, 62, 0.25);
 }
 
-/* ── Login inputs ──────────────────────────────────────────────────────── */
 .tt-login-input {
     width: 100%;
     border: 1.5px solid var(--tt-border);
@@ -472,7 +454,6 @@
     box-shadow: 0 0 0 3px rgba(57, 77, 168, 0.1);
 }
 
-/* ── Login error ───────────────────────────────────────────────────────── */
 .tt-login-error {
     background: rgba(224, 62, 62, 0.08);
     border: 1px solid rgba(224, 62, 62, 0.25);
@@ -486,7 +467,6 @@
     white-space: pre-line;
 }
 
-/* ── Logout button variant ──────────────────────────────────────────────── */
 .tt-button-logout {
     background: transparent !important;
     color: #94a0b8 !important;
@@ -503,6 +483,3 @@
     box-shadow: none !important;
     transform: none !important;
 }
-
-/* Name mismatch is shown inline inside .tt-login-error — no overlay needed */
-

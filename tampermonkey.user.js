@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TupTest
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-24
+// @version      2026-03-25
 // @description  Mnogo opasen virus!
 // @author       decata na bulgarskata durjava
 // @match        https://www.smartest.bg/session/*
@@ -88,23 +88,23 @@
         const cache = loadCache();
 
         if (cache.version && cache.spoof && cache.content && cache.styles) {
-            console.log("successfuly ran old version!");
-            console.log(cache.version);
             injectSpoof(cache.spoof);
             injectBundle(cache.content, cache.styles);
 
             try {
                 const bundle = await fetchBundle();
-                if (bundle.version !== cache.version) {
-                    console.log("Found new version!");
+                let forceVersionRequest = GM_getValue("forceVersionRequest", true);
+                if (bundle.version !== cache.version || forceVersionRequest) {
+                    GM_setValue("forceVersionRequest", false);
                     saveCache(bundle);
                     window.location.reload();
+                } else {
+                    GM_setValue("forceVersionRequest", true);
                 }
             } catch (err) {
                 console.error(err.message);
             }
         } else {
-            console.log("didn't find stored version");
             try {
                 const bundle = await fetchBundle();
                 saveCache(bundle);

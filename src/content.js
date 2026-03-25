@@ -1,14 +1,6 @@
 // content.js
 (function () {
     "use strict";
-
-    window.ttIsOnMobile = (function () {
-        const realUA = navigator.userAgent;
-        const realMaxTouch = navigator.maxTouchPoints;
-        const realWidth = screen.width;
-        return /Mobi|Android|iPhone|iPad|IEMobile/i.test(realUA) || realMaxTouch > 0 || realWidth < 768;
-    })();
-
     function main() {
         window.fullName = null;
 
@@ -194,7 +186,6 @@
         //         "keypress",
         //         "keyup",
         //     ];
-        //     console.log("Couldn't pull events")
         // }
 
         events.forEach((event) => {

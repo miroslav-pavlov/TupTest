@@ -13,7 +13,8 @@ const utils = fs.readFileSync("./src/utils.js", "utf8");
 const combined = `${utils}\n${config}\n${auth}\n${ui}\n${menu}\n${content}`;
 
 if (isDev) {
-    fs.writeFileSync("./build/content.js", combined);
+    // fs.writeFileSync("./build/content.js", combined);
+    fs.writeFileSync("C:/Users/mirko/Projects/TupTest/TupTestServer/modmenu/content.js", combined);
     console.log("content.js built successfully (dev, unobfuscated)");
 } else {
     const obfuscated = JavaScriptObfuscator.obfuscate(combined, {
@@ -50,6 +51,8 @@ if (isDev) {
         debugProtection: false,
     });
 
-    fs.writeFileSync("./build/content.js", obfuscated.getObfuscatedCode());
+    // fs.writeFileSync("./build/content.js", obfuscated.getObfuscatedCode());
+    fs.writeFileSync("C:/Users/mirko/Projects/TupTest/TupTestServer/modmenu/content.js", obfuscated.getObfuscatedCode());
+
     console.log("content.js built successfully");
 }
