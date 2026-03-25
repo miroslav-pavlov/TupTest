@@ -376,6 +376,11 @@
     background: white;
 }
 
+#login-screen .tt-button {
+    margin-bottom: 8px;
+}
+
+
 #login-inner {
     display: flex;
     flex-direction: column;
@@ -482,4 +487,26 @@
     border-color: rgba(224, 62, 62, 0.3) !important;
     box-shadow: none !important;
     transform: none !important;
+}
+
+.tt-button-secondary {
+    background: transparent;
+    color: var(--tt-primary);
+    border: 1.5px solid rgba(57, 77, 168, 0.35);
+    box-shadow: none;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tt-button-secondary:hover {
+    background: rgba(57, 77, 168, 0.06);
+    border-color: var(--tt-primary);
+    box-shadow: none;
+    transform: none;
+}
+
+.tt-button-secondary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }

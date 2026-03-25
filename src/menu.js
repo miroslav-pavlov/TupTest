@@ -8,6 +8,7 @@ async function createFloatingMenu(isOnMobile = false) {
     //   "active"        – startTestButton clicked, full menu available
     let stage = "waiting_name";
     let capturedName = null;
+    let capturedNumber = null;
 
     const {
         screenLogin,
@@ -18,6 +19,7 @@ async function createFloatingMenu(isOnMobile = false) {
         loginPassword,
         loginError,
         loginBtn,
+        autoLoginBtn,
         messages,
         input,
         send,
@@ -42,6 +44,13 @@ async function createFloatingMenu(isOnMobile = false) {
         loginUsername.style.opacity = canLogin ? "1" : "0.45";
         loginPassword.style.opacity = canLogin ? "1" : "0.45";
         loginBtn.style.opacity = canLogin ? "1" : "0.45";
+
+        const creds = loadCredentials();
+        const showAutoLogin = (stage === "waiting_name" || stage === "waiting_login") && !!creds;
+        autoLoginBtn.style.display = showAutoLogin ? "block" : "none";
+        autoLoginBtn.textContent = creds ? `Влез като ${creds.username}` : "Влез автоматично";
+        autoLoginBtn.className = showAutoLogin ? "tt-button" : "tt-button tt-button-secondary";
+        loginBtn.className = showAutoLogin ? "tt-button tt-button-secondary" : "tt-button";
 
         switch (stage) {
             case "waiting_name":
@@ -68,6 +77,7 @@ async function createFloatingMenu(isOnMobile = false) {
                 break;
             case "active":
                 // Activate breaks
+                // TODO: Does it even need to use window if all files are merged. Security exploit?
                 if (typeof window.onExtensionActivated === "function") {
                     window.onExtensionActivated();
                 }
@@ -78,7 +88,7 @@ async function createFloatingMenu(isOnMobile = false) {
     // Initial state — restore to "active" if a valid session survived a refresh
     if (isTokenValid()) {
         const p = sessionPayload;
-        // TODO: Save stored name to session
+        // TODO: Save stored name to session (Done? Make sure this has been already taken care of)
         // We can't know capturedName after a refresh (it was in memory),
         // but the name was already validated at login time, so it's safe to
         // go straight to active. content.js will still watch startTestButton on the
@@ -109,8 +119,10 @@ async function createFloatingMenu(isOnMobile = false) {
         // No valid token — check if the user already entered their name before the reload
         try {
             const savedName = sessionStorage.getItem("tt_captured_name");
-            if (savedName) {
+            const savedNumber = sessionStorage.getItem("tt_captured_number");
+            if (savedName && savedNumber) {
                 capturedName = savedName;
+                capturedNumber = savedNumber;
                 stage = "waiting_login";
                 restoredNameFromStorage = true;
             } else {
@@ -187,15 +199,18 @@ async function createFloatingMenu(isOnMobile = false) {
                 const expectedLatin = payload.full_name_latin || "";
                 const expectedCyrillic = payload.full_name_cyrillic || "";
                 loginError.textContent = `Името не съвпада - върни се и го поправи.\nВъведено:\n${capturedName}\nРегистрирано:\n${expectedCyrillic}\n${expectedLatin}`;
+                // TODO: Instead of wrong name error automaticaly change it to English first and last name with a popup explaining the change.
+                // loginError.textContent = `Името в сайта не съвпада и ТъпТест автоматично го промени на ${"<name without middle>"}.\nВалидни имена са:\n${"<Име без средно>"}\n${expectedCyrillic}\n${"<name without middle>"}\n${expectedLatin}`;
                 loginError.style.display = "block";
                 clearSession();
                 return;
             }
 
             // Success — but stay on login screen until startTestButton is pressed
-            // TODO: Request AI API Key at login in case of server failure afterwards. (fiex but maybe there is a batter place to do it)
+            // TODO: Request AI API Key at login in case of server failure afterwards. (fixed but maybe there is a batter place to do it)
             requestAiApiKey(sessionToken);
             stage = "waiting_start_test";
+            saveCredentials(username, password, capturedName, capturedNumber);
             try {
                 sessionStorage.setItem(SS_STAGE_KEY, "waiting_start_test");
             } catch {}
@@ -240,28 +255,33 @@ async function createFloatingMenu(isOnMobile = false) {
     // clearSession() also removes the token from sessionStorage, so a refresh
     // after going back to the name screen will correctly start from scratch.
     window.onSiteStageReset = function () {
-        if (restoredNameFromStorage) {
-            restoredNameFromStorage = false;
-            return;
+    if (restoredNameFromStorage) {
+        restoredNameFromStorage = false;
+        return;
+    }
+
+    capturedName = null;
+    capturedNumber = null;
+    clearSession();
+    try {
+        sessionStorage.removeItem("tt_captured_name");
+        sessionStorage.removeItem("tt_captured_number");
+        sessionStorage.removeItem(SS_STAGE_KEY);
+    } catch {}
+    loginError.style.display = "none";
+    stage = "waiting_name";
+    applyStage();
+
+    if (window.pendingAutoLogin) {
+        const creds = loadCredentials();
+        if (creds && typeof window.onAutofillSiteName === "function") {
+            // TODO: Janky way to fix the issue? Try to fix it when dealing with window migration.
+            setTimeout(() => {
+                window.onAutofillSiteName(creds.siteName, creds.siteNumber);
+            }, 0);
         }
-
-        capturedName = null;
-        clearSession();
-        try {
-            sessionStorage.removeItem("tt_captured_name");
-            sessionStorage.removeItem(SS_STAGE_KEY); // ← only clear on real reset
-        } catch {}
-        loginError.style.display = "none";
-        stage = "waiting_name";
-        applyStage();
-    };
-
-    // Called when user submits name with submitButton
-    window.fullNameSubmitted = function (enteredName) {
-        capturedName = enteredName;
-        stage = "waiting_login";
-        applyStage();
-    };
+    }
+};
 
     // Called when user clicks startTestButton
     window.onSiteStartTestBtnClicked = function () {
@@ -290,6 +310,50 @@ async function createFloatingMenu(isOnMobile = false) {
     loginPassword.addEventListener("keydown", (e) => {
         if (e.key === "Enter") doLogin();
     });
+
+    autoLoginBtn.addEventListener("click", async () => {
+        const creds = loadCredentials();
+        if (!creds) return;
+
+        if (stage === "waiting_login" && (capturedName !== creds.siteName || capturedNumber !== creds.siteNumber)) {
+            // Wrong name/number is on the site — go back and re-enter the correct ones
+            window.pendingAutoLogin = true;
+            if (typeof window.onAutofillReturnToName === "function") {
+                window.onAutofillReturnToName();
+            }
+            // onSiteStageReset will fire naturally from startNameFlow(),
+            // which sets stage to waiting_name, then onAutofillSiteName fires
+            // once fullNameSubmitted advances us back to waiting_login
+            return;
+        }
+
+        if (stage === "waiting_name") {
+            window.pendingAutoLogin = true;
+            if (typeof window.onAutofillSiteName === "function") {
+                window.onAutofillSiteName(creds.siteName, creds.siteNumber);
+            }
+            return;
+        }
+
+        // waiting_login — fill and submit
+        loginUsername.value = creds.username;
+        loginPassword.value = creds.password;
+        await doLogin();
+    });
+
+    // Called when user submits name with submitButton
+    window.fullNameSubmitted = function (enteredName, enteredNumber) {
+        capturedName = enteredName;
+        capturedNumber = enteredNumber;
+        stage = "waiting_login";
+        applyStage();
+
+        // If autofill was triggered from waiting_name, finish logging in now
+        if (window.pendingAutoLogin) {
+            window.pendingAutoLogin = false;
+            autoLoginBtn.click();
+        }
+    };
 
     // ═════════════════════════════════════════════════════════════════════════
     // CHAT / AI

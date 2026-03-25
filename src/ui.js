@@ -42,15 +42,15 @@ function createMenu(isOnMobile = false) {
         loginInner.appendChild(tipTab);
     }
 
-    const tipLoginHint = document.createElement("div");
-    tipLoginHint.id = "login-hint";
-    tipLoginHint.className = "tt-tip-login-warning";
-    loginInner.appendChild(tipLoginHint);
-
     const loginTitle = document.createElement("div");
     loginTitle.className = "tt-section-label";
     loginTitle.textContent = "Вход";
     loginInner.appendChild(loginTitle);
+
+    const tipLoginHint = document.createElement("div");
+    tipLoginHint.id = "login-hint";
+    tipLoginHint.className = "tt-tip-login-warning";
+    loginInner.appendChild(tipLoginHint);
 
     const loginUsername = document.createElement("input");
     loginUsername.type = "text";
@@ -73,9 +73,16 @@ function createMenu(isOnMobile = false) {
     loginInner.appendChild(loginError);
 
     const loginBtn = document.createElement("button");
-    loginBtn.className = "tt-button";
+    loginBtn.className = "tt-button tt-button-secondary";
     loginBtn.textContent = "Влез";
     loginInner.appendChild(loginBtn);
+
+    const autoLoginBtn = document.createElement("button");
+    autoLoginBtn.className = "tt-button";
+    autoLoginBtn.id = "btn-autofill";
+    autoLoginBtn.textContent = "Влез автоматично";
+    autoLoginBtn.style.display = "none";
+    loginInner.appendChild(autoLoginBtn);
 
     const screenAI = document.createElement("div");
     screenAI.id = "tt-screen";
@@ -233,6 +240,7 @@ function createMenu(isOnMobile = false) {
         loginPassword,
         loginError,
         loginBtn,
+        autoLoginBtn,
 
         // AI screen elements
         messages,

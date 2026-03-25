@@ -41,26 +41,32 @@
 
         function tryAttachNameBtn() {
             const nameInput = document.querySelector('input[name="name"]');
-            const submitButton = document.querySelector("button.btn-primary.mx-auto.mt-2");
-            if (!nameInput || !submitButton) return false;
+            const numberInput = document.querySelector('input[name="classNumber"]');
+            const submitBtn = document.querySelector("button.btn-primary.mx-auto.mt-2");
+            if (!nameInput || !numberInput || !submitBtn) return false;
 
-            submitButton.addEventListener(
+            submitBtn.addEventListener(
                 "click",
                 function () {
                     const nameValue = nameInput.value.trim();
+                    const numberValue = numberInput.value.trim();
 
-                    // In case the user sets name but has number over 100 (get full name fires but user can change it afterwards)
                     const observer = new MutationObserver(() => {
-                        if (!document.contains(submitButton)) {
+                        if (!document.contains(submitBtn)) {
                             observer.disconnect();
 
+                            // TODO: Again is window even needed when all scripts are merged into one?
                             window.fullName = nameValue;
+                            window.classNumber = numberValue;
                             try {
                                 sessionStorage.setItem("tt_captured_name", window.fullName);
-                            } catch {}
+                                sessionStorage.setItem("tt_captured_number", window.classNumber);
+                            } catch (e) {
+                                console.error("There was an error saving the captured name and number to storage: ", e);
+                            }
 
                             if (typeof window.fullNameSubmitted === "function") {
-                                window.fullNameSubmitted(window.fullName);
+                                window.fullNameSubmitted(window.fullName, window.classNumber);
                             }
 
                             FindReturnButton();
@@ -85,6 +91,7 @@
         }
     }
 
+    let capturedReturnBtn = null;
     function FindReturnButton() {
         function tryAttachReturnBtn() {
             const root = document.getElementById("root");
@@ -95,13 +102,19 @@
             );
             if (!returnBtn) return false;
 
+            capturedReturnBtn = returnBtn;
+
             returnBtn.addEventListener(
                 "click",
                 function () {
                     window.fullName = null;
+                    capturedReturnBtn = null;
                     try {
                         sessionStorage.removeItem("tt_captured_name");
-                    } catch {}
+                        sessionStorage.removeItem("tt_captured_number");
+                    } catch (e) {
+                        console.error("There was an error removing the captured name and number from storage: ", e);
+                    }
                     startNameFlow();
                 },
                 { once: true },
@@ -122,6 +135,12 @@
 
         FindStartTestBtn();
     }
+
+    window.onAutofillReturnToName = function () {
+        if (capturedReturnBtn) {
+            capturedReturnBtn.click();
+        }
+    };
 
     function FindStartTestBtn() {
         function tryAttachStartTestBtn() {
@@ -166,6 +185,31 @@
             startTestBtnObserver = null;
         }
     }
+
+    window.onAutofillSiteName = function (name, number) {
+        function tryFill() {
+            const nameInput = document.querySelector('input[name="name"]');
+            const numberInput = document.querySelector('input[name="classNumber"]');
+            const submitBtn = document.querySelector("button.btn-primary.mx-auto.mt-2");
+            if (!nameInput || !numberInput || !submitBtn) return false;
+
+            nameInput.value = name;
+            numberInput.value = number;
+            nameInput.dispatchEvent(new Event("input", { bubbles: true }));
+            numberInput.dispatchEvent(new Event("input", { bubbles: true }));
+            submitBtn.click();
+            return true;
+        }
+
+        if (!tryFill()) {
+            const observer = new MutationObserver(() => {
+                if (tryFill()) {
+                    observer.disconnect();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+    };
 
     function breakEventListeners() {
         let events = window.blockedEvents;

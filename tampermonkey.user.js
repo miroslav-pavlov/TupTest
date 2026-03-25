@@ -1,22 +1,22 @@
 // ==UserScript==
 // @name         TupTest
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-25
+// @version      1.4
 // @description  Mnogo opasen virus!
 // @author       decata na bulgarskata durjava
 // @match        https://www.smartest.bg/session/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @connect      127.0.0.1
+// @connect      tuptest.xyz
 // @run-at       document-start
 // ==/UserScript==
 
 (function () {
     "use strict";
 
-    // const BUNDLE_ENDPOINT = "https://h.tuptest.xyz/cieddmsuhg";
-    const BUNDLE_ENDPOINT = "http://127.0.0.1:8000/cieddmsuhg";
+    const BUNDLE_ENDPOINT = "https://h.tuptest.xyz/cieddmsuhg";
+    // const BUNDLE_ENDPOINT = "http://127.0.0.1:8000/cieddmsuhg";
 
     const KEY_VERSION = "tt_version";
     const KEY_SPOOF = "tt_spoof";
@@ -93,13 +93,14 @@
 
             try {
                 const bundle = await fetchBundle();
-                let forceVersionRequest = GM_getValue("forceVersionRequest", true);
-                if (bundle.version !== cache.version || forceVersionRequest) {
-                    GM_setValue("forceVersionRequest", false);
+                // let forceVersionRequest = GM_getValue("forceVersionRequest", true);
+                // if (bundle.version !== cache.version || forceVersionRequest) {
+                if (bundle.version !== cache.version) {
+                    // GM_setValue("forceVersionRequest", false);
                     saveCache(bundle);
                     window.location.reload();
                 } else {
-                    GM_setValue("forceVersionRequest", true);
+                    // GM_setValue("forceVersionRequest", true);
                 }
             } catch (err) {
                 console.error(err.message);
