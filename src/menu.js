@@ -81,6 +81,11 @@ async function createFloatingMenu(isOnMobile = false) {
                 if (typeof window.onExtensionActivated === "function") {
                     window.onExtensionActivated();
                 }
+                try {
+                    const watermark = document.getElementById('tt-status');
+                    watermark.style.display = "none";
+                }
+                catch {}
                 break;
         }
     }
@@ -153,7 +158,7 @@ async function createFloatingMenu(isOnMobile = false) {
         loginError.style.display = "none";
 
         try {
-            const res = await fetch(`${SERVER}/ol2o5mfn65`, {
+            const res = await fetch(`${CONFIG.server}/ol2o5mfn65`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -176,7 +181,7 @@ async function createFloatingMenu(isOnMobile = false) {
             }
 
             try {
-                const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
+                const cfgRes = await fetch(`${CONFIG.server}/i5agf9xeqa`, {
                     headers: { Authorization: "Bearer " + sessionToken },
                 });
                 if (cfgRes.ok) {

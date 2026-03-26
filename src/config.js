@@ -1,8 +1,10 @@
 // config.js
 let aiApiKey = null;
 window.blockedEvents = null;
-const CONFIG = { model: "nvidia/nemotron-nano-12b-v2-vl:free" };
-const SERVER = "https://h.tuptest.xyz";
+const CONFIG = {
+    server: "https://h.tuptest.xyz",
+    model: "nvidia/nemotron-nano-12b-v2-vl:free",
+};
 
 // Fetch AI API Key only once in case of server failure
 async function requestAiApiKey(sessionToken) {
@@ -10,7 +12,7 @@ async function requestAiApiKey(sessionToken) {
         return aiApiKey;
     }
     try {
-        const keyRes = await fetch(`${SERVER}/hvx6yoogbh`, {
+        const keyRes = await fetch(`${CONFIG.server}/hvx6yoogbh`, {
             headers: { Authorization: "Bearer " + sessionToken },
         });
         if (!keyRes.ok) throw new Error("key fetch failed");
@@ -20,5 +22,3 @@ async function requestAiApiKey(sessionToken) {
         return null;
     }
 }
-
-

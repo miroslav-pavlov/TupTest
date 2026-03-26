@@ -1,6 +1,6 @@
 // auth.js
 // moved to config.js
-// const SERVER = "https://h.tuptest.xyz";
+// const CONFIG.server = "https://h.tuptest.xyz";
 
 const SS_KEY = "tt_token";
 const SS_STAGE_KEY = "tt_stage";
@@ -52,6 +52,7 @@ function isTokenValid() {
 (function restoreSession() {
     try {
         const saved = sessionStorage.getItem(SS_KEY);
+        // TODO: If user closes site and opens it in another tab try to get name from <p class="text-center">test test, № 1</p> and try to autologin
         if (!saved) return;
         const payload = parsePayload(saved);
         if (!payload) {
@@ -70,7 +71,7 @@ function isTokenValid() {
 
 async function fetchAndStoreConfig(sessionToken) {
     try {
-        const cfgRes = await fetch(`${SERVER}/i5agf9xeqa`, {
+        const cfgRes = await fetch(`${CONFIG.server}/i5agf9xeqa`, {
             headers: { Authorization: "Bearer " + sessionToken },
         });
         if (cfgRes.ok) {

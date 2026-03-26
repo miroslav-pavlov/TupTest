@@ -110,6 +110,7 @@
                     window.fullName = null;
                     capturedReturnBtn = null;
                     try {
+                        clearSession();
                         sessionStorage.removeItem("tt_captured_name");
                         sessionStorage.removeItem("tt_captured_number");
                     } catch (e) {
