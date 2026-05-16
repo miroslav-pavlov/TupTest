@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         TupTest
 // @namespace    http://tampermonkey.net/
-// @version      1.1
-// @updateURL    https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey_userscript/tuptest.user.js
-// @downloadURL  https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey_userscript/tuptest.user.js
+// @version      2.0.0
+// @updateURL    https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js
+// @downloadURL  https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js
 // @description  tuptest ne se nujdae ot obqsnenie
 // @author       decata na bulgarskata durjava
 // @match        https://www.smartest.bg/session/*
@@ -20,7 +20,7 @@
 
 (function () {
     "use strict";
-    // Промени на "false" за да скриеш сивия текст в ъгъла
+    // Промени showDebug на "false" за да скриеш сивия текст в ъгъла
     const showDebug = true;
     const isDev = false;
 
@@ -56,11 +56,9 @@
             return JSON.parse(text);
         }
 
-        const releaseText = await gmFetch(`https://api.github.com/repos/miroslav-pavlov/TupTest/releases`);
-        const releases = JSON.parse(releaseText);
-        if (!Array.isArray(releases)) throw new Error("Unexpected response from GitHub");
-        const release = releases.find(r => r.tag_name.startsWith("script-"));
-        if (!release) throw new Error("No script releases found");
+        const releaseText = await gmFetch(`https://api.github.com/repos/miroslav-pavlov/TupTest/releases/latest`);
+        const release = JSON.parse(releaseText);
+        if (!release.tag_name) throw new Error("No releases found");
         const version = release.tag_name;
 
         function assetUrl(name) {
