@@ -82,10 +82,9 @@ async function createFloatingMenu(isOnMobile = false) {
                     window.onExtensionActivated();
                 }
                 try {
-                    const watermark = document.getElementById('tt-status');
+                    const watermark = document.getElementById("tt-status");
                     watermark.style.display = "none";
-                }
-                catch {}
+                } catch {}
                 break;
         }
     }
@@ -180,17 +179,7 @@ async function createFloatingMenu(isOnMobile = false) {
                 return;
             }
 
-            try {
-                const cfgRes = await fetch(`${CONFIG.server}/i5agf9xeqa`, {
-                    headers: { Authorization: "Bearer " + sessionToken },
-                });
-                if (cfgRes.ok) {
-                    const cfg = await cfgRes.json();
-                    if (Array.isArray(cfg.blocked_events)) {
-                        window.blockedEvents = cfg.blocked_events;
-                    }
-                }
-            } catch {}
+            fetchAndStoreConfig(sessionToken)
 
             const payload = sessionPayload;
             if (!payload.subscription_active) {
@@ -212,8 +201,6 @@ async function createFloatingMenu(isOnMobile = false) {
             }
 
             // Success — but stay on login screen until startTestButton is pressed
-            // TODO: Request AI API Key at login in case of server failure afterwards. (fixed but maybe there is a batter place to do it)
-            requestAiApiKey(sessionToken);
             stage = "waiting_start_test";
             saveCredentials(username, password, capturedName, capturedNumber);
             try {
@@ -221,6 +208,7 @@ async function createFloatingMenu(isOnMobile = false) {
             } catch {}
             applyStage();
         } catch (e) {
+            // FIXME: Menu shows logged in when connection to server was actually refused
             loginError.textContent = "Проблем с връзката към сървъра.";
             loginError.style.display = "block";
             console.error(e);
@@ -260,33 +248,33 @@ async function createFloatingMenu(isOnMobile = false) {
     // clearSession() also removes the token from sessionStorage, so a refresh
     // after going back to the name screen will correctly start from scratch.
     window.onSiteStageReset = function () {
-    if (restoredNameFromStorage) {
-        restoredNameFromStorage = false;
-        return;
-    }
-
-    capturedName = null;
-    capturedNumber = null;
-    clearSession();
-    try {
-        sessionStorage.removeItem("tt_captured_name");
-        sessionStorage.removeItem("tt_captured_number");
-        sessionStorage.removeItem(SS_STAGE_KEY);
-    } catch {}
-    loginError.style.display = "none";
-    stage = "waiting_name";
-    applyStage();
-
-    if (window.pendingAutoLogin) {
-        const creds = loadCredentials();
-        if (creds && typeof window.onAutofillSiteName === "function") {
-            // TODO: Janky way to fix the issue? Try to fix it when dealing with window migration.
-            setTimeout(() => {
-                window.onAutofillSiteName(creds.siteName, creds.siteNumber);
-            }, 0);
+        if (restoredNameFromStorage) {
+            restoredNameFromStorage = false;
+            return;
         }
-    }
-};
+
+        capturedName = null;
+        capturedNumber = null;
+        clearSession();
+        try {
+            sessionStorage.removeItem("tt_captured_name");
+            sessionStorage.removeItem("tt_captured_number");
+            sessionStorage.removeItem(SS_STAGE_KEY);
+        } catch {}
+        loginError.style.display = "none";
+        stage = "waiting_name";
+        applyStage();
+
+        if (window.pendingAutoLogin) {
+            const creds = loadCredentials();
+            if (creds && typeof window.onAutofillSiteName === "function") {
+                // TODO: Janky way to fix the issue? Try to fix it when dealing with window migration.
+                setTimeout(() => {
+                    window.onAutofillSiteName(creds.siteName, creds.siteNumber);
+                }, 0);
+            }
+        }
+    };
 
     // Called when user clicks startTestButton
     window.onSiteStartTestBtnClicked = function () {
@@ -401,7 +389,7 @@ async function createFloatingMenu(isOnMobile = false) {
         autoResizeTextarea(input);
         addMessage(text, true);
 
-        if (!aiApiKey) {
+        if (!CONFIG.ai.key) {
             addMessage("Не може да се получи AI ключ. Моля опитай пак.", false);
 
             // TODO: Clears session but doesn't return to login because intended way was trough logout button. Return logout button in case of error?
@@ -412,10 +400,9 @@ async function createFloatingMenu(isOnMobile = false) {
 
         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
-            headers: { Authorization: "Bearer " + aiApiKey, "Content-Type": "application/json" },
+            headers: { Authorization: "Bearer " + CONFIG.ai.key, "Content-Type": "application/json" },
             body: JSON.stringify({
-                // TODO: Do something about CONFIG.moDel
-                model: CONFIG.model,
+                model: CONFIG.ai.model,
                 messages: [{ role: "user", content: text }],
                 stream: true,
             }),

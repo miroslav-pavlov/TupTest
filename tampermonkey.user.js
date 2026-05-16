@@ -4,7 +4,7 @@
 // @version      1.1
 // @updateURL    https://tuptest.xyz/tuptest.user.js
 // @downloadURL  https://tuptest.xyz/tuptest.user.js
-// @description  znaesh kakvo e tuptest, ne se nujdaesh ot obqsnenie
+// @description  tuptest ne se nujdae ot obqsnenie
 // @author       decata na bulgarskata durjava
 // @match        https://www.smartest.bg/session/*
 // @grant        GM_xmlhttpRequest
@@ -21,7 +21,7 @@
 
     const BUNDLE_ENDPOINT = "https://h.tuptest.xyz/cieddmsuhg";
     // add @connect
-    // const BUNDLE_ENDPOINT = "http://127.0.0.1:8000/cieddmsuhg";
+    // const BUNDLE_ENDPOINT = "http://localhost:8000/cieddmsuhg";
 
     const KEY_VERSION = "tt_version";
     const KEY_SPOOF = "tt_spoof";
@@ -29,7 +29,7 @@
     const KEY_STYLES = "tt_styles";
 
     function createWatermark() {
-        const text = "Built by Acme Corp · v1.0.0";
+        const text = "";
 
         const watermark = document.createElement("div");
         watermark.id = "tt-status";

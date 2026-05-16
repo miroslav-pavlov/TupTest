@@ -213,7 +213,7 @@
     };
 
     function breakEventListeners() {
-        let events = window.blockedEvents;
+        let events = CONFIG.blockedEvents;
         // if (!events || events.length == 0) {
         //     events = [
         //         "fullscreenchange",

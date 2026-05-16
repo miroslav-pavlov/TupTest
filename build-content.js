@@ -11,7 +11,7 @@ const ui = fs.readFileSync("./src/ui.js", "utf8");
 const utils = fs.readFileSync("./src/utils.js", "utf8");
 const credentials = fs.readFileSync("./src/credentials.js", "utf8");
 
-    const combined = `${utils}\n${config}\n${auth}\n${credentials}\n${ui}\n${menu}\n${content}`;
+    const combined = `${utils}\n${auth}\n${config}\n${credentials}\n${ui}\n${menu}\n${content}`;
 
 if (isDev) {
     // fs.writeFileSync("./build/content.js", combined);
