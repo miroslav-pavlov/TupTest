@@ -24,95 +24,10 @@ function createMenu(isOnMobile = false) {
     content.id = "tt-content";
     menu.appendChild(content);
 
-    const screenLogin = document.createElement("div");
-    screenLogin.id = "login-screen";
-    screenLogin.className = "tt-screen";
-    screenLogin.style.display = "flex";
-    content.appendChild(screenLogin);
-
-    const loginInner = document.createElement("div");
-    loginInner.id = "login-inner";
-    screenLogin.appendChild(loginInner);
-
-    const tipTab = document.createElement("div");
-    if (!isOnMobile) {
-        tipTab.id = "tab-hint";
-        tipTab.className = "tt-tip-login-base tt-tip-login-waiting";
-        tipTab.textContent = "С бутона TAB можеш да скриеш менюто.";
-        loginInner.appendChild(tipTab);
-    }
-
-    const loginTitle = document.createElement("div");
-    loginTitle.className = "tt-section-label";
-    loginTitle.textContent = "Вход";
-    loginInner.appendChild(loginTitle);
-
-    const tipLoginHint = document.createElement("div");
-    tipLoginHint.id = "login-hint";
-    tipLoginHint.className = "tt-tip-login-warning";
-    loginInner.appendChild(tipLoginHint);
-
-    const loginUsername = document.createElement("input");
-    loginUsername.type = "text";
-    loginUsername.id = "login-username";
-    loginUsername.placeholder = "Потребителско име";
-    loginUsername.className = "tt-login-input";
-    loginInner.appendChild(loginUsername);
-
-    const loginPassword = document.createElement("input");
-    loginPassword.type = "password";
-    loginPassword.id = "login-password";
-    loginPassword.placeholder = "Парола";
-    loginPassword.className = "tt-login-input";
-    loginInner.appendChild(loginPassword);
-
-    const loginError = document.createElement("div");
-    loginError.id = "login-error";
-    loginError.className = "tt-login-error";
-    loginError.style.display = "none";
-    loginInner.appendChild(loginError);
-
-    const loginBtn = document.createElement("button");
-    loginBtn.className = "tt-button tt-button-secondary";
-    loginBtn.textContent = "Влез";
-    loginInner.appendChild(loginBtn);
-
-    const autoLoginBtn = document.createElement("button");
-    autoLoginBtn.className = "tt-button";
-    autoLoginBtn.id = "btn-autofill";
-    autoLoginBtn.textContent = "Влез автоматично";
-    autoLoginBtn.style.display = "none";
-    loginInner.appendChild(autoLoginBtn);
-
-    const screenAI = document.createElement("div");
-    screenAI.id = "tt-screen";
-    screenAI.className = "tt-screen";
-    screenAI.style.display = "none";
-    content.appendChild(screenAI);
-
-    const messages = document.createElement("div");
-    messages.id = "tt-messages";
-    screenAI.appendChild(messages);
-
-    const inputArea = document.createElement("div");
-    inputArea.id = "tt-input-area";
-
-    const input = document.createElement("textarea");
-    input.id = "tt-input";
-    input.placeholder = "Ask anything…";
-
-    const send = document.createElement("button");
-    send.className = "tt-button";
-    send.textContent = "Send";
-
-    inputArea.appendChild(input);
-    inputArea.appendChild(send);
-    screenAI.appendChild(inputArea);
-
     const screenButtons = document.createElement("div");
     screenButtons.id = "buttons-screen";
     screenButtons.className = "tt-screen";
-    screenButtons.style.display = "none";
+    screenButtons.style.display = "flex";
     content.appendChild(screenButtons);
 
     const badgesRow = document.createElement("div");
@@ -163,18 +78,6 @@ function createMenu(isOnMobile = false) {
     btnCopy.id = "btn-copy";
     screenButtons.appendChild(btnCopy);
 
-    const btnAskAI = document.createElement("button");
-    btnAskAI.textContent = "Попитай AI\n( Не поддържа снимки )";
-    btnAskAI.className = "tt-button";
-    btnAskAI.id = "btn-ask-ai";
-    screenButtons.appendChild(btnAskAI);
-
-    const toggleMenusBtn = document.createElement("button");
-    toggleMenusBtn.id = "tt-toggle";
-    toggleMenusBtn.style.display = "none";
-    toggleMenusBtn.textContent = "Покажи AI";
-    menu.appendChild(toggleMenusBtn);
-
     // ── Drag ──────────────────────────────────────────────────────────────
     let dragging = false,
         offsetX,
@@ -196,11 +99,7 @@ function createMenu(isOnMobile = false) {
     closeBtn.onclick = () => (menu.style.display = "none");
 
     secretIcon.onclick = () => {
-        if (menu.style.display === "none") {
-            menu.style.display = "flex";
-        } else {
-            menu.style.display = "none";
-        }
+        menu.style.display = menu.style.display === "none" ? "flex" : "none";
     };
 
     document.addEventListener(
@@ -213,41 +112,4 @@ function createMenu(isOnMobile = false) {
         },
         true,
     );
-
-    // ── Toggle AI / Buttons ──────────────────────────────────────────────────
-    let aiVisible = false;
-    toggleMenusBtn.onclick = () => {
-        aiVisible = !aiVisible;
-        screenAI.style.display = aiVisible ? "flex" : "none";
-        screenButtons.style.display = aiVisible ? "none" : "flex";
-        toggleMenusBtn.textContent = aiVisible ? "Скрий AI" : "Покажи AI";
-        if (aiVisible && !window.ttIsOnMobile) {
-            input.focus();
-        } else {
-            document.activeElement?.blur();
-        }
-    };
-
-    return {
-        // Screens
-        screenLogin,
-        screenAI,
-        screenButtons,
-
-        // Login screen elements
-        tipLoginHint,
-        loginUsername,
-        loginPassword,
-        loginError,
-        loginBtn,
-        autoLoginBtn,
-
-        // AI screen elements
-        messages,
-        input,
-        send,
-
-        // Header
-        toggleMenusBtn,
-    };
 }

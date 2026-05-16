@@ -2,15 +2,17 @@
 // @name         TupTest
 // @namespace    http://tampermonkey.net/
 // @version      1.1
-// @updateURL    https://tuptest.xyz/tuptest.user.js
-// @downloadURL  https://tuptest.xyz/tuptest.user.js
+// @updateURL    https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey_userscript/tuptest.user.js
+// @downloadURL  https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey_userscript/tuptest.user.js
 // @description  tuptest ne se nujdae ot obqsnenie
 // @author       decata na bulgarskata durjava
 // @match        https://www.smartest.bg/session/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @connect      tuptest.xyz
+// @connect      api.github.com
+// @connect      objects.githubusercontent.com
+// @connect      localhost
 // @run-at       document-start
 // ==/UserScript==
 
@@ -18,22 +20,63 @@
     "use strict";
     // Промени на "false" за да скриеш сивия текст в ъгъла
     const showDebug = true;
+    const isDev = true;
 
-    const BUNDLE_ENDPOINT = "https://h.tuptest.xyz/cieddmsuhg";
-    // add @connect
-    // const BUNDLE_ENDPOINT = "http://localhost:8000/cieddmsuhg";
+    const DEV_ENDPOINT = "http://localhost:42424/bundle";
 
     const KEY_VERSION = "tt_version";
     const KEY_SPOOF = "tt_spoof";
     const KEY_CONTENT = "tt_content";
     const KEY_STYLES = "tt_styles";
 
-    function createWatermark() {
-        const text = "";
+    function gmFetch(url) {
+        return new Promise((resolve, reject) => {
+            GM_xmlhttpRequest({
+                method: "GET",
+                url,
+                onload(res) {
+                    if (res.status !== 200) {
+                        reject(new Error(`Server returned ${res.status} for ${url}`));
+                        return;
+                    }
+                    resolve(res.responseText);
+                },
+                onerror(err) {
+                    reject(new Error("Network error: " + JSON.stringify(err)));
+                },
+            });
+        });
+    }
 
+    async function fetchBundle() {
+        if (isDev) {
+            const text = await gmFetch(DEV_ENDPOINT);
+            return JSON.parse(text);
+        }
+
+        const releaseText = await gmFetch(`https://api.github.com/repos/miroslav-pavlov/TupTest/releases/latest`);
+        const releases = JSON.parse(releaseText);
+        const release = releases.find(r => r.tag_name.startsWith("script-"));
+        const version = release.tag_name;
+
+        function assetUrl(name) {
+            const asset = release.assets.find((a) => a.name === name);
+            if (!asset) throw new Error(`Asset "${name}" not found in release ${version}`);
+            return asset.browser_download_url;
+        }
+
+        const [spoof, content, styles] = await Promise.all([
+            gmFetch(assetUrl("spoof.js")),
+            gmFetch(assetUrl("tuptest.js")),
+            gmFetch(assetUrl("styles.css")),
+        ]);
+
+        return { version, spoof, content, styles };
+    }
+
+    function createWatermark() {
         const watermark = document.createElement("div");
         watermark.id = "tt-status";
-        watermark.textContent = text;
         watermark.style.display = showDebug ? "block" : "none";
 
         Object.assign(watermark.style, {
@@ -50,11 +93,10 @@
             letterSpacing: "0.02em",
             transition: "opacity 0.3s ease",
         });
-        document.addEventListener("DOMContentLoaded", function () {
-            document.body.appendChild(watermark);
-        });
 
-        if (document.readyState !== "loading") {
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => document.body.appendChild(watermark));
+        } else {
             document.body.appendChild(watermark);
         }
         return watermark;
@@ -102,32 +144,24 @@
         GM_setValue(KEY_STYLES, styles);
     }
 
-    function fetchBundle() {
-        return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: "GET",
-                url: BUNDLE_ENDPOINT,
-                onload(res) {
-                    if (res.status !== 200) {
-                        reject(new Error(`Server returned ${res.status}`));
-                        return;
-                    }
-                    try {
-                        resolve(JSON.parse(res.responseText));
-                    } catch (e) {
-                        reject(new Error("Failed to parse bundle JSON"));
-                    }
-                },
-                onerror(err) {
-                    reject(new Error("Network error: " + JSON.stringify(err)));
-                },
-            });
-        });
-    }
-
     async function main() {
-        const cache = loadCache();
         const watermark = createWatermark();
+
+        if (isDev) {
+            editWatermark(watermark, "dev mode: fetching from localhost");
+            try {
+                const bundle = await fetchBundle();
+                injectSpoof(bundle.spoof);
+                injectBundle(bundle.content, bundle.styles);
+                editWatermark(watermark, "dev mode: loaded from localhost");
+            } catch (err) {
+                editWatermark(watermark, "dev mode: error connecting to localhost");
+                console.error(err.message);
+            }
+            return;
+        }
+
+        const cache = loadCache();
 
         if (cache.version && cache.spoof && cache.content && cache.styles) {
             injectSpoof(cache.spoof);
@@ -135,33 +169,29 @@
             editWatermark(watermark, `found installed version: ${cache.version}`);
 
             try {
-                editWatermark(watermark, `searching for updates`);
+                editWatermark(watermark, "searching for updates");
                 const bundle = await fetchBundle();
-                // let forceVersionRequest = GM_getValue("forceVersionRequest", true);
-                // if (bundle.version !== cache.version || forceVersionRequest) {
-                    if (bundle.version !== cache.version) {
+                if (bundle.version !== cache.version) {
                     editWatermark(watermark, `new version found: ${bundle.version}`);
-                    // GM_setValue("forceVersionRequest", false);
                     saveCache(bundle);
                     window.location.reload();
                 } else {
                     editWatermark(watermark, `running latest version: ${cache.version}`);
-                    // GM_setValue("forceVersionRequest", true);
                 }
             } catch (err) {
-                editWatermark(watermark, `error connecting to server`);
+                editWatermark(watermark, "error connecting to server");
                 console.error(err.message);
             }
         } else {
             try {
-                editWatermark(watermark, `downloading tuptest`);
+                editWatermark(watermark, "downloading tuptest");
                 const bundle = await fetchBundle();
                 saveCache(bundle);
                 injectSpoof(bundle.spoof);
                 injectBundle(bundle.content, bundle.styles);
                 window.location.reload();
             } catch (err) {
-                editWatermark(watermark, `error connecting to server`);
+                editWatermark(watermark, "error connecting to server");
                 console.error("Error! ", err.message);
             }
         }

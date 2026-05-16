@@ -4,17 +4,14 @@
     function main() {
         window.fullName = null;
 
-        window.onExtensionActivated = function () {
-            breakEventListeners();
-            breakTimersAndCounters();
-        };
+        breakEventListeners();
+        breakTimersAndCounters();
 
         // Build floating menu
         createFloatingMenu(window.ttIsOnMobile);
         enableFullscreenButton(document.getElementById("btn-fullscreen"));
         enableBackButton(document.getElementById("btn-back"));
         enableCopyButton(document.getElementById("btn-copy"));
-        enableAskAIButton(document.getElementById("btn-ask-ai"));
 
         // Kick off the name-capture / site-button watcher
         startNameFlow();
@@ -26,10 +23,6 @@
 
     function startNameFlow() {
         stopNameFlow();
-
-        if (typeof window.onSiteStageReset === "function") {
-            window.onSiteStageReset();
-        }
 
         // In case of site restart after already submitting name there is no longer a submit button to attach to
         try {
@@ -110,7 +103,6 @@
                     window.fullName = null;
                     capturedReturnBtn = null;
                     try {
-                        clearSession();
                         sessionStorage.removeItem("tt_captured_name");
                         sessionStorage.removeItem("tt_captured_number");
                     } catch (e) {
@@ -213,25 +205,7 @@
     };
 
     function breakEventListeners() {
-        let events = CONFIG.blockedEvents;
-        // if (!events || events.length == 0) {
-        //     events = [
-        //         "fullscreenchange",
-        //         "resize",
-        //         "orientationchange",
-        //         "focus",
-        //         "blur",
-        //         "visibilitychange",
-        //         "copy",
-        //         "cut",
-        //         "paste",
-        //         "contextmenu",
-        //         "selectstart",
-        //         "keydown",
-        //         "keypress",
-        //         "keyup",
-        //     ];
-        // }
+        const events = CONFIG.blockedEvents;
 
         events.forEach((event) => {
             window.addEventListener(
@@ -250,7 +224,7 @@
     }
 
     function breakTimersAndCounters() {
-        // ── Timer break ───────────────────────────────────────────────────────
+        // Break Timer
         const originalSetInterval = window.setInterval;
 
         window.setInterval = function (callback, delay) {
@@ -262,7 +236,7 @@
             return originalSetInterval.apply(this, arguments);
         };
 
-        // ── Cheating counter + refresh detection break ─────────────────────
+        // Cheating counter + refresh detection break
         const _origGetItem = localStorage.getItem.bind(localStorage);
         const _origSetItem = localStorage.setItem.bind(localStorage);
 
@@ -305,7 +279,7 @@
 
     function getFormattedQuestion(copyImagesAsURLs) {
         const allQuestionObjects = document.querySelectorAll('div[class*="Question_question__"]');
-        let prompt = "Solve the following questions with a short answer:\n";
+        let prompt = "Реши следните въпроси с кратък отговор:\n";
         let questions = [];
         let idx = 1;
 
@@ -318,7 +292,7 @@
             let answers = "";
 
             if (ansEls.length === 0) {
-                answers = "Answer:\n";
+                answers = "Отговор:\n";
             } else {
                 const raw = [];
                 for (let i = 1; i < ansEls.length; i++) {
@@ -327,11 +301,11 @@
                 }
 
                 if (qObj.querySelector('span[contenteditable="true"]')) {
-                    answers = "Given text:\n" + raw.join(" ____ ");
+                    answers = "Даден отговор:\n" + raw.join(" ____ ");
                 } else if (qObj.querySelector('[class*="SolvableConnectPairs_part__"]')) {
                     const mid = raw.length / 2;
                     answers =
-                        "Given answers:\n" +
+                        "Дадени отговори:\n" +
                         raw.map((a, i) => `${i + 1 <= mid ? i + 1 : numberToLetter(i + 1)}. ${a}`).join("\n");
                 } else {
                     raw.length = 0;
@@ -349,7 +323,7 @@
                         });
                         raw.push(parts.join(" "));
                     }
-                    answers = "Given answers:\n" + raw.map((a, i) => `${i + 1}. ${a}`).join("\n");
+                    answers = "Дадени отговори:\n" + raw.map((a, i) => `${i + 1}. ${a}`).join("\n");
                 }
             }
 
@@ -363,15 +337,6 @@
     function enableCopyButton(btnObject) {
         btnObject.onclick = function () {
             navigator.clipboard.writeText(getFormattedQuestion(true));
-        };
-    }
-
-    function enableAskAIButton(btnObject) {
-        btnObject.onclick = function () {
-            const text = getFormattedQuestion(false);
-            const toggleBtn = document.getElementById("tt-toggle");
-            if (toggleBtn && toggleBtn.textContent === "Покажи AI") toggleBtn.click();
-            window.sendMessage(text);
         };
     }
 

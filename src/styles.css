@@ -55,17 +55,6 @@
     }
 }
 
-@keyframes aiFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 #tt-header {
     background: linear-gradient(135deg, var(--tt-primary) 0%, var(--tt-primary-light) 100%);
     color: white;
@@ -78,7 +67,6 @@
     cursor: move;
     z-index: 999999;
     letter-spacing: 0.02em;
-    /* user-select: none; */
 }
 
 #tt-header::after {
@@ -122,19 +110,12 @@
     background: white;
 }
 
-#tt-screen {
-    display: flex;
-    flex-direction: column;
-    font-family: Nunito, Helvetica, sans-serif !important;
-}
-
 #buttons-screen {
-    display: none;
+    display: flex;
     flex-direction: column;
     font-family: Nunito, Helvetica, sans-serif !important;
     z-index: 999999;
     padding: 16px 14px 8px;
-    gap: 0;
     overflow-y: auto;
 }
 
@@ -201,130 +182,23 @@
     box-sizing: border-box;
 }
 
-#tt-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px 12px 8px;
-    font-family: Nunito, Helvetica, sans-serif !important;
-    scroll-behavior: smooth;
-}
-
-#tt-messages::-webkit-scrollbar {
-    width: 4px;
-}
-#tt-messages::-webkit-scrollbar-track {
-    background: transparent;
-}
-#tt-messages::-webkit-scrollbar-thumb {
-    background: rgba(57, 77, 168, 0.2);
-    border-radius: 4px;
-}
-
-.tt-msg {
+.tt-tip-login-base {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
     padding: 8px 12px;
-    border-radius: 12px;
-    font-size: 12.5px;
-    max-width: 82%;
-    animation: aiFadeIn 0.2s ease;
-    font-family: Nunito, Helvetica, sans-serif !important;
-    line-height: 1.5;
-}
-
-.tt-msg h1 {
-    font-size: 15px;
-    margin: 2px 0;
-}
-.tt-msg h2 {
-    font-size: 14px;
-    margin: 2px 0;
-}
-.tt-msg h3 {
-    font-size: 13px;
-    margin: 2px 0;
-}
-.tt-msg b {
-    font-weight: 700;
-}
-.tt-msg i {
-    font-style: italic;
-}
-
-.tt-user {
-    background: linear-gradient(135deg, var(--tt-primary) 0%, var(--tt-primary-light) 100%);
-    color: white;
-    border-bottom-right-radius: 3px;
-    box-shadow: 0 2px 8px rgba(57, 77, 168, 0.25);
-}
-
-.tt-bot {
-    background: #f4f6fb;
-    color: #212529;
-    border-bottom-left-radius: 3px;
-    box-shadow: var(--tt-shadow-sm);
-    border: 1px solid rgba(57, 77, 168, 0.06);
-}
-
-.tt-user-position {
-    display: flex;
-    flex: 1;
-    justify-content: flex-end;
-    margin-bottom: 10px;
-}
-
-.tt-bot-position {
-    display: flex;
-    flex: 1;
-    justify-content: flex-start;
-    margin-bottom: 10px;
-}
-
-#tt-input-area {
-    display: flex;
-    gap: 8px;
-    padding: 10px 12px 12px;
-    background: white;
-    border-top: 1px solid rgba(57, 77, 168, 0.08);
-    font-family: Nunito, Helvetica, sans-serif !important;
-}
-
-#tt-input {
-    resize: none;
-    overflow-y: hidden;
-    height: 36px;
-    min-height: 36px;
-    max-height: 150px;
-    flex: 1;
-    border: 1.5px solid var(--tt-border);
     border-radius: var(--tt-radius-sm);
-    padding: 7px 11px;
-    font-family: Nunito, Helvetica, sans-serif !important;
-    font-size: 13px;
-    line-height: 20px;
-    box-sizing: border-box;
-    outline: none;
-    transition:
-        border-color var(--tt-transition),
-        box-shadow var(--tt-transition);
-    background: #f8f9fc;
-    color: #212529;
+    margin-bottom: 12px;
+    line-height: 1.4;
 }
 
-#tt-input::placeholder {
-    color: #b0b9d0;
+.tt-tip-login-waiting {
+    background: rgba(57, 77, 168, 0.07);
+    color: var(--tt-primary);
+    border: 1px solid rgba(57, 77, 168, 0.18);
 }
 
-#tt-input.scrollable {
-    overflow-y: auto;
-}
-
-#tt-input:focus {
-    border-color: var(--tt-button-hover);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(57, 77, 168, 0.1);
-}
-
-.tt-button,
-#tt-toggle {
+.tt-button {
     background: var(--tt-button);
     color: white;
     border: none;
@@ -342,171 +216,13 @@
     box-shadow: 0 2px 6px rgba(57, 77, 168, 0.2);
 }
 
-.tt-button:hover,
-#tt-toggle:hover {
+.tt-button:hover {
     background: var(--tt-button-hover);
     box-shadow: 0 4px 12px rgba(32, 212, 167, 0.3);
     transform: translateY(-1px);
 }
 
-.tt-button:active,
-#tt-toggle:active {
+.tt-button:active {
     transform: translateY(0);
     box-shadow: none;
-}
-
-#tt-toggle {
-    width: calc(100% - 24px);
-    margin: 0 12px 12px;
-    padding: 0.55rem;
-    border-radius: var(--tt-radius-sm);
-    font-size: 16px;
-    letter-spacing: 0.02em;
-}
-
-#warning-text {
-    color: #e03e3e;
-    font-size: 11.5px;
-}
-
-#login-screen {
-    flex-direction: column;
-    justify-content: center;
-    padding: 24px 18px;
-    background: white;
-}
-
-#login-screen .tt-button {
-    margin-bottom: 8px;
-}
-
-
-#login-inner {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-#login-inner .tt-section-label {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--tt-primary);
-    margin-bottom: 14px;
-    text-align: center;
-}
-
-.tt-tip-login-base {
-    font-size: 12px;
-    font-weight: 600;
-    text-align: center;
-    padding: 8px 12px;
-    border-radius: var(--tt-radius-sm);
-    margin-bottom: 12px;
-    line-height: 1.4;
-}
-
-.tt-tip-login-waiting {
-    background: rgba(57, 77, 168, 0.07);
-    color: var(--tt-primary);
-    border: 1px solid rgba(57, 77, 168, 0.18);
-}
-
-.tt-tip-login-ready {
-    background: rgba(32, 212, 167, 0.1);
-    color: #0a8c68;
-    border: 1px solid rgba(32, 212, 167, 0.35);
-}
-
-.tt-tip-login-warning {
-    background: rgba(224, 62, 62, 0.08);
-    color: #c0392b;
-    border: 1px solid rgba(224, 62, 62, 0.25);
-}
-
-.tt-login-input {
-    width: 100%;
-    border: 1.5px solid var(--tt-border);
-    border-radius: var(--tt-radius-sm);
-    padding: 9px 13px;
-    font-family: Nunito, Helvetica, sans-serif;
-    font-size: 13px;
-    line-height: 20px;
-    outline: none;
-    background: #f8f9fc;
-    color: #212529;
-    transition:
-        border-color var(--tt-transition),
-        box-shadow var(--tt-transition),
-        opacity var(--tt-transition);
-    margin-bottom: 10px;
-    box-sizing: border-box;
-}
-
-.tt-login-input::placeholder {
-    color: #b0b9d0;
-}
-
-.tt-login-input:disabled {
-    cursor: not-allowed;
-    background: #f0f1f5;
-}
-
-.tt-login-input:not(:disabled):focus {
-    border-color: var(--tt-button-hover);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(57, 77, 168, 0.1);
-}
-
-.tt-login-error {
-    background: rgba(224, 62, 62, 0.08);
-    border: 1px solid rgba(224, 62, 62, 0.25);
-    border-radius: var(--tt-radius-sm);
-    color: #c0392b;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 7px 11px;
-    margin-bottom: 10px;
-    line-height: 1.4;
-    white-space: pre-line;
-}
-
-.tt-button-logout {
-    background: transparent !important;
-    color: #94a0b8 !important;
-    border: 1.5px solid #dee2e6 !important;
-    box-shadow: none !important;
-    font-size: 13px !important;
-    margin-top: 4px;
-}
-
-.tt-button-logout:hover {
-    background: rgba(224, 62, 62, 0.07) !important;
-    color: #c0392b !important;
-    border-color: rgba(224, 62, 62, 0.3) !important;
-    box-shadow: none !important;
-    transform: none !important;
-}
-
-.tt-button-secondary {
-    background: transparent;
-    color: var(--tt-primary);
-    border: 1.5px solid rgba(57, 77, 168, 0.35);
-    box-shadow: none;
-    font-size: 13px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.tt-button-secondary:hover {
-    background: rgba(57, 77, 168, 0.06);
-    border-color: var(--tt-primary);
-    box-shadow: none;
-    transform: none;
-}
-
-.tt-button-secondary:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
 }
