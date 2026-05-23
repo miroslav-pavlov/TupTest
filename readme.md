@@ -2,7 +2,7 @@
   <img align="center" alt="logo" src="https://www.smartest.bg/favicon.ico">
 </p>  
 
-# ТъпТест - инструменти за преписване за СмарТест
+# ТъпТест - инструменти за преписване в СмарТест (smartest.bg)
 ---
 ### 📑 Бързи връзки
 
