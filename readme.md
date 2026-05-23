@@ -6,6 +6,7 @@
 <p align="center" height="30%">
 <video src="https://github.com/user-attachments/assets/3a298ed6-e100-4c7e-a5f6-7bdea38708b3" height="30%" controls></video>
 </p>  
+
 ---  
 ### 📑 Бързи връзки
 
