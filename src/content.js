@@ -280,7 +280,7 @@
     function getFormattedQuestion(copyImagesAsURLs) {
         // const allQuestionObjects = document.querySelectorAll('div[class*="Question_question__"]');
         const questionBundles = document.querySelectorAll('div[class*="MuiCardContent-root"]');
-        const prompt = "Реши следните въпроси с кратък отговор:\n";
+        const prompt = "Реши следните въпроси:\n";
         const questions = [];
 
         for (const questionBundle of questionBundles) {
