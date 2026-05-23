@@ -5,7 +5,9 @@ function createFloatingMenu(isOnMobile = false) {
     window.onExtensionActivated = function () {
         try {
             const watermark = document.getElementById("tt-status");
-            if (watermark) watermark.style.display = "none";
+            if (watermark) {
+                watermark.style.display = "none";
+            }
         } catch {}
     };
 

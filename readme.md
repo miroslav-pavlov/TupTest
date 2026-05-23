@@ -1,60 +1,75 @@
-# ТъпТест
-Инструменти за сайта https://smartest.bg/
-## Функции на ТъпТест
-- Бутон за копиране на въпросите (за да пращаш на AI)
-- Спира таймерите на въпросите (таймера на теста продължава да тече!)
-- Връщане на предишни въпроси
-- Напускане на fullscreen
-- Преоразмеряване на екрана
-- Ако не искаш да правиш теста просто затвори прозореца
-> - Позволява refresh-ване на страницата (планирано)
-> - Безкрайни червени екрани в случай че някакси се появят (счупено)
-## Как да изтеглиш:
-### За компютър 🖥️
-1. Изтегляш Tampermonkey:  
-За **Chrome** и **Edge** от [тук](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo).  
-За **Firefox** от [тук](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/).
+<p align="center">
+  <img align="center" alt="logo" src="https://www.smartest.bg/favicon.ico">
+</p>  
 
-2. Трябва ръчно да позволиш на Tampermonkey да работи и в инкогнито! Във Firefox oтиди в extensions tab-а на браузъра си и на трите точки на Tampermonkey избери manage и след това тикчето за инкогнито.  
-3. Изтегляш ТъпТест от [тук](https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js).
+# ТъпТест - инструменти за преписване за СмарТест
+---
+### 📑 Бързи връзки
+
+- [Изтегляне](#-изтегляне)
+- [Функции](#-функции)
+- [Използване](#-използване)
+- [Въпроси](#-въпроси)
+- [Разработване](#-разработване)
+---
+## 📦 Изтегляне
+### 🖥️ На компютър
+1. Изтегляш **Tampermonkey**:  
+- За **Chrome** и **Edge**: [Изтегляш **Tampermonkey**](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo).  
+- За **Firefox**: [Изтегляш **Tampermonkey**](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/).
+2. Позволяваш да върви в **Incognito**:
+- За **Chrome** и **Edge**: Горе дясно > бутонът Extensions > трите точки на **Tampermonkey** > Manage Extension > **Allow User Scripts: ON** и **Allow in Incognito: ON**.
+- За **Firefox**: Горе дясно > бутонът Extensions > зъбното колело на **Tampermonkey** > Manage Extension > **Run in Private Windows: ON**.
+3. [Изтегляш **ТъпТест**](https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js). 
 4. Готов си! Прочети по-долу как да го използваш.
-### За Android 🟢️
-1. Изтегляш приложението на Firefox или Edge. **Chrome не става!**
-  
-2. В избраното приложение в секция Extensions (намери го сам) търсиш и инсталираш **Tampermonkey**.
-3. Трябва ръчно да позволиш на Tampermonkey да работи и в инкогнито! Отиди в extensions tab-а на браузъра си и на трите точки на Tampermonkey избери manage и след това тикчето за инкогнито. 
-4. Изтегляш ТъпТест от [тук](https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js).  
+### 🟢️ На Android
+1. Изтегляш **[Firefox](https://play.google.com/store/apps/details?id=org.mozilla.firefox)** или **[Edge](https://play.google.com/store/apps/details?id=com.microsoft.emmx)**. (**Chrome не става!**)
+2. Изтегляш **Tampermonkey**:
+- За **Firefox**: Трите точки > Extensions > изтегляш **Tampermonkey**.
+- За **Edge**: Трите черти > Extensions > Manage Extensions > изтегляш **Tampermonkey**.
+3. Позволяваш да върви в **Incognito**:
+- За **Firefox**: Трите точки > Extensions > трите точки на **Tampermonkey** > **Run in private browsing: ON**.
+- За **Edge**: Трите черти > Extensions > Manage Extensions > трите точки на **Tampermonkey** “ **Allow User Scripts: ON** и **Рun InPrivate: ON**.
+4. [Изтегляш **ТъпТест**](https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js).  
 5. Готов си! Прочети по-долу как да го използваш.
-### За iPhone 🍎️
+### 🍎️ На iPhone
 1. В AppStore-a **купуваш Tampermonkey** за **3€**. Ако не искаш да плащаш си вземи **Android**. Няма друг начин за iPhone :(
-  
-2. Трябва ръчно да позволиш на Tampermonkey да работи и в инкогнито! В настройките на телефона си се ориентирай до Tampermonkey и в неговите настройки избери тикчето за инкогнито. 
-3. Изтегляш ТъпТест от [тук](https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js).  
+2. В настройките на телефона си се ориентирай до Tampermonkey и в неговите настройки иму позволи да работи в инкогнито. 
+3. [Изтегляш **ТъпТест**](https://raw.githubusercontent.com/miroslav-pavlov/TupTest/tampermonkey-userscript/tuptest.user.js).  
 4. Готов си! Прочети по-долу как да го използваш.
-
-## Как да използваш
-1. В браузъра си отидаш на https://tuptest.bg/izpit (на изуст запомняш линка) и пишеш кода си за теста.
-2. След като си напишеш името натискаш иконката на СмарТест или бутона на клавиатурата TAB за да отвориш менюто.
-3. Стартираш си теста и се кефиш. 👍️
-
-## Имаш въпроси?
-Ако въпросът ти не е отговорен по-долу ме питай в секцията **Issues** (горе ляво).
-1. **Защо Tampermonkey?** Защото е единствения общ начин да върви и на компютър, и на Android, и на iPhone. Иначе можех да изключа iPhone-а и да направя extension.
-## Как да го подкараш сам
-1. Трябват ти **Node.js** и **NPM** изтеглени
- 
-1.  Инсталираш нужните пакети:
-```
+---
+## ✨ Функции
+- Бутон за връщане към предишен въпрос
+- Бутон за копиране на въпросите (за да пращаш на AI)
+- Спиране на таймерите на въпросите (но таймера на теста продължава да тече!)
+- Напускане на цял екран
+- Напускане на приложението
+- Спиране на изпращането на теста при затваряне на таба
+> - История на тестовете (планирано)
+---
+## 🫱 Използване
+1. В браузъра си отиваш на **https://tuptest.bg/izpit** и пишеш кода си за теста.
+2. Натискаш **иконката на СмарТест** или бутона на клавиатурата **TAB** за да отвориш менюто.
+3. Преписваш. Прочети [Функции](#функции) за да знаеш какво можеш да правиш.
+---
+## ❓ Въпроси
+Ако въпросът ти не е отговорен по-долу го задай в секцията **Issues** (горе ляво на този сайт).
+1. **Защо Tampermonkey?** Защото е единствения начин да върви и на iPhone. Иначе можеше да бъде extension и да не поддържа iPhone-а.
+---
+## 🔧 Разработване
+1. Изтегляш [Node.js и NPM](https://nodejs.org).
+2. Изтегляш нужните пакети:
+```bash
 npm install
 ```
-
--  Строиш проекта. Файловете са в папката **build/***
-```
-npm run build
-```
--  Строиш проекта + рънваш сървъра за Tampermonkey. Файловете са в папката **build/***
-```
+3. Локално тестване.
+- В кода на **Tampermonkey** включи **`isDev`**.
+```bash
 npm run dev
 ```
-(Сървъра е за локално тестване на Tampermonkey)
+4. Строиш проекта за качване на Release. (Файловете са в папката **build/***)
+```bash
+npm run build
+```
+
 
