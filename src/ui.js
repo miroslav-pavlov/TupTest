@@ -61,7 +61,7 @@ function createMenu(isOnMobile = false) {
     screenButtons.appendChild(submitNotice);
 
     const btnFullscreen = document.createElement("button");
-    btnFullscreen.textContent = "Toggle Fullscreen";
+    btnFullscreen.textContent = "Направи на цял екран";
     btnFullscreen.className = "tt-button";
     btnFullscreen.id = "btn-fullscreen";
     screenButtons.appendChild(btnFullscreen);
@@ -73,7 +73,7 @@ function createMenu(isOnMobile = false) {
     screenButtons.appendChild(btnBack);
 
     const btnCopy = document.createElement("button");
-    btnCopy.textContent = "Копирай въпрос/и\n( Поддържа снимки )";
+    btnCopy.textContent = "Копирай въпроси";
     btnCopy.className = "tt-button";
     btnCopy.id = "btn-copy";
     screenButtons.appendChild(btnCopy);

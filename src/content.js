@@ -278,40 +278,42 @@
     }
 
     function getFormattedQuestion(copyImagesAsURLs) {
-        const allQuestionObjects = document.querySelectorAll('div[class*="Question_question__"]');
-        let prompt = "Реши следните въпроси с кратък отговор:\n";
-        let questions = [];
-        let idx = 1;
+        // const allQuestionObjects = document.querySelectorAll('div[class*="Question_question__"]');
+        const questionBundles = document.querySelectorAll('div[class*="MuiCardContent-root"]');
+        const prompt = "Реши следните въпроси с кратък отговор:\n";
+        const questions = [];
 
-        for (const qObj of allQuestionObjects) {
-            const qDiv = qObj.querySelector('div[class*="Question_disableSelection__"]');
-            const qTest = qDiv.children[0].children[0].children[1];
-            const qImg = copyImagesAsURLs ? qDiv.querySelector("img") : null;
-            const qText = qTest?.value || qTest?.textContent || "";
-            const ansEls = qObj.querySelectorAll(".public-DraftStyleDefault-block");
-            let answers = "";
+        for (const questionBundle of questionBundles) {
+            const questionElement = questionBundle.querySelector('div[class*="Question_disableSelection__"]');
+            // TODO: Implement image copying
+            const qImg = copyImagesAsURLs ? questionElement.querySelector("img") : null;
+            const answersPresent = questionBundle.querySelector("hr") ? true : false;
+            const questionText = questionElement?.textContent || "";
 
-            if (ansEls.length === 0) {
-                answers = "Отговор:\n";
-            } else {
-                const raw = [];
-                for (let i = 1; i < ansEls.length; i++) {
-                    const t = ansEls[i].innerText.trim();
-                    if (t) raw.push(t);
+            const answerElements = questionBundle.querySelectorAll("span[data-offset-key]");
+            let answersString = "";
+
+            if (answersPresent && answerElements.length > 1) {
+                const rawAnswersText = [];
+                for (let i = 1; i < answerElements.length; i++) {
+                    const text = answerElements[i].innerText.trim();
+                    if (text) rawAnswersText.push(text);
                 }
-
-                if (qObj.querySelector('span[contenteditable="true"]')) {
-                    answers = "Даден отговор:\n" + raw.join(" ____ ");
-                } else if (qObj.querySelector('[class*="SolvableConnectPairs_part__"]')) {
-                    const mid = raw.length / 2;
-                    answers =
+                //Текст с празни места
+                if (questionBundle.querySelector('span[contenteditable="true"]')) {
+                    answersString = "Даден текст с празни места:\n" + rawAnswersText.join(" ____ ");
+                // Кутии за свързване
+                } else if (questionBundle.querySelector('[class*="SolvableConnectPairs_part__"]')) {
+                    const mid = rawAnswersText.length / 2;
+                    answersString =
                         "Дадени отговори:\n" +
-                        raw.map((a, i) => `${i + 1 <= mid ? i + 1 : numberToLetter(i + 1)}. ${a}`).join("\n");
+                        rawAnswersText.map((a, i) => `${i + 1 <= mid ? numberToLetter(i + 1) : i + 1}) ${a}`).join("\n");
+                //Нормални затворени отговори
                 } else {
-                    raw.length = 0;
-                    for (let i = 1; i < ansEls.length; i++) {
+                    rawAnswersText.length = 0;
+                    for (let i = 1; i < answerElements.length; i++) {
                         const parts = [];
-                        ansEls[i].childNodes.forEach((node) => {
+                        answerElements[i].childNodes.forEach((node) => {
                             let t = "";
                             if (node.tagName === "SPAN") {
                                 t = node.innerText.trim();
@@ -321,14 +323,13 @@
                             }
                             if (t) parts.push(t);
                         });
-                        raw.push(parts.join(" "));
+                        rawAnswersText.push(parts.join(" "));
                     }
-                    answers = "Дадени отговори:\n" + raw.map((a, i) => `${i + 1}. ${a}`).join("\n");
+                    answersString = "Дадени отговори:\n" + rawAnswersText.map((a, i) => `${numberToLetter(i + 1)}) ${a}`).join("\n");
                 }
             }
 
-            questions.push(`${idx}. ${qText}\n${qImg ? qImg.src : ""}\n${answers}\n`);
-            idx++;
+            questions.push(`${questionText}${qImg ? "\n" + qImg.src : ""}${answersString != "" ? "\n" + answersString : ""}`);
         }
 
         return prompt + questions.join("\n");
