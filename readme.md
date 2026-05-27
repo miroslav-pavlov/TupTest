@@ -1,7 +1,7 @@
 <p align="center">
   <img width="100px" alt="tuptest" src="https://github.com/user-attachments/assets/9d8e92f1-f8d3-4689-a3ad-af9019f3c1e0" />
 </p>  
-<h1 align="center">ТъпТест - инструмент за преписване в СмарТест</h1>
+<h1 align="center">ТъпТест - инструменти за преписване в СмарТест</h1>
 <details>
 <summary><h3>Демо видео (натисни за да видиш)</h3></summary>
 <video src="https://github.com/user-attachments/assets/3a298ed6-e100-4c7e-a5f6-7bdea38708b3" height="15%" controls></video>
