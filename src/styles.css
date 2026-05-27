@@ -3,6 +3,8 @@
 :root {
     --tt-primary: #394da8;
     --tt-primary-light: #4a61c7;
+    --tt-header: #d9dde0;
+    --tt-header-light: #ebebeb;
     --tt-primary-dark: #2d3d8a;
     --tt-button: #1dc198;
     --tt-button-hover: #20d4a7;
@@ -39,25 +41,15 @@
     flex-direction: column;
     overflow: hidden;
     font-family: Nunito, Helvetica, sans-serif !important;
-    animation: ttSlideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
     z-index: 999999;
     border: 1px solid rgba(57, 77, 168, 0.1);
 }
 
-@keyframes ttSlideUp {
-    from {
-        opacity: 0;
-        transform: translateY(16px) scale(0.97);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
+
 
 #tt-header {
-    background: linear-gradient(135deg, var(--tt-primary) 0%, var(--tt-primary-light) 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--tt-header) 0%, var(--tt-header-light) 100%);
+    color: rgb(163, 163, 163);
     padding: 0.85rem 1rem 0.85rem 1.1rem;
     font-size: 15px;
     font-weight: 700;
